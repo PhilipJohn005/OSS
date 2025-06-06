@@ -7,7 +7,7 @@ import Logout from '@/components/Logout';
 const HomePage = async () => {
 
     const session=await auth();
-
+console.log("🔐 Session on HomePage:", session);
     if(!session?.user)redirect("/");
   return (
     <div>
