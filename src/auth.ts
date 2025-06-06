@@ -20,20 +20,9 @@ export const{
             },
         }),
     ],
-    session:{
-        strategy:"jwt",
-        maxAge:60*60*24*10
-    },
-    secret: process.env.NEXTAUTH_SECRET,
-
-    callbacks:{
-        async jwt({ token, user, account, profile, isNewUser }) {
-            console.log("JWT callback token (payload):", token);
-            return token;
-        },
-        async session({ session, token, user }) {
-            console.log("Session callback session:", session);
-            return session;
-        },
-    }
+   session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24 * 10, // 10 days session expiry
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 });
