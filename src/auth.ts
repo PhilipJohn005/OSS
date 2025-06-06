@@ -13,7 +13,9 @@ export const{
             clientSecret:process.env.GITHUB_CLIENT_SECRET,
             authorization:{
                 params:{
-
+                    prompt:"consent",
+                    access_type:"offline",
+                    response_type:"code",
                 },
             },
         }),
