@@ -1,1 +1,1 @@
-export {GET,POST} from '@/auth';
+export {GET,POST} from '@/auth'; //any any req like api/auth/* will have to use GET,POST defined in auth.ts
