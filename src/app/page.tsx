@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import LoginForm from '@/components/LoginForm'
 import Logout from '@/components/Logout'
+import { HeroSectionOne } from '@/components/HeroSectionOne'
 
 const Page = () => {
   const { data: session, status } = useSession()
@@ -14,24 +15,9 @@ const Page = () => {
   }
 
   return (
-    <div>
-      {!session ? (
-        <>
-          <h1>Sign in</h1>
-          <LoginForm />
-        </>
-      ) : (
-        <>
-        <h1>{session?.user?.name}</h1>
-          <Image
-            src={session?.user?.image ?? "/default-avatar.png"}
-            alt={session?.user?.name ?? "User Avatar"}
-            width={72}
-            height={72}
-            className="rounded-full"/>
-          <Logout/>
-        </>
-      )}
+    <div className='mx-4'>
+      <HeroSectionOne/>
+
     </div>
   )
 }
