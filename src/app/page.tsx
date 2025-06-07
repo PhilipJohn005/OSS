@@ -22,6 +22,7 @@ const Page = () => {
         </>
       ) : (
         <>
+        <h1>{session?.user?.name}</h1>
           <Image
             src={session?.user?.image ?? "/default-avatar.png"}
             alt={session?.user?.name ?? "User Avatar"}
