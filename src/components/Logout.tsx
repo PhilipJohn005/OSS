@@ -1,14 +1,14 @@
-import React from 'react'
-import { doLogout } from '@/app/actions'
+'use client'
 
-const Logout = () => {
+import { signOut } from 'next-auth/react'
+
+export default function Logout() {
   return (
-    <form action={doLogout}>
-        <button type='submit' >
-            Logout
-        </button>
-    </form>
+    <button
+      onClick={() => signOut({ callbackUrl: '/' })}
+      className="bg-red-500 p-2 rounded-md text-white"
+    >
+      Logout
+    </button>
   )
 }
-
-export default Logout
