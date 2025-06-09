@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
+import Link from "next/link";
 
 const tags = ["aws", "kotlin"];
 const cardData = [
@@ -46,7 +47,12 @@ export default function YardPage() {
           ))}
         </div>
         <div className="absolute right-1 bottom-1">
-          <button className="rounded bg-gray-300 px-3 py-1 text-sm font-medium cursor-pointer hover:bg-gray-600">+ Add</button>
+          <Link href={"/help-request"}>
+            <button 
+              className="rounded bg-gray-300 px-3 py-1 text-sm font-medium cursor-pointer hover:bg-gray-600"
+            >+ Add</button>
+          </Link>
+          
         </div>
       </div>
 
