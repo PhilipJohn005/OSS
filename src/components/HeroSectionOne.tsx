@@ -1,7 +1,7 @@
 "use client";
 
 import LoginForm from "./LoginForm";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { useSession } from 'next-auth/react'
 import Logout from '@/components/Logout'
 import Image from 'next/image'
