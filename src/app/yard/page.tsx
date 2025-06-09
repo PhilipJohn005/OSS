@@ -1,38 +1,45 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
-const tags = ["aws", "kotlin"];
-const cardData = [
-  { id: 1, name: "hello", tags: ["aws", "docker", "sssss", "sfafda", "sasdas", "aaaaaaaaa", "dafdsfdsfdsgf", "dfdsfgsgfsg", "gfsgfsg", "xxxxxxxxxxxx", "gdgfdafhuadh", "gsdgadf", "fdafugda", "gdfgfs"] },
-  { id: 2, name: "hello", tags: ["aws"] },
-  { id: 3, name: "hello", tags: [] },
-  { id: 4, name: "hello", tags: [] },
-  { id: 5, name: "hello", tags: [] },
-  { id: 6, name: "hello", tags: [] },
-  { id: 7, name: "hello", tags: [] },
-  { id: 8, name: "hello", tags: [] },
-  { id: 9, name: "hello", tags: [] },
-  { id: 10, name: "hello", tags: [] },
-  { id: 11, name: "hello", tags: [] },
-  { id: 12, name: "hello", tags: [] },
-  { id: 13, name: "hello", tags: [] },
-  { id: 14, name: "hello", tags: [] },
-  { id: 15, name: "hello", tags: [] },
-  { id: 16, name: "hello", tags: [] },
-  { id: 17, name: "hello", tags: [] },
-];
+  const tags=['AWS','K8']
 
 const CARDS_PER_PAGE = 8;
 
+interface Card {
+  id: string;
+  card_name: string;
+  tags: string[];
+}
+
 export default function YardPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [cards,setCards]=useState<Card[]>([]);
 
-  const totalPages = Math.ceil(cardData.length / CARDS_PER_PAGE);
+
+  const totalPages = Math.ceil(cards.length / CARDS_PER_PAGE);
   const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
   const endIndex = startIndex + CARDS_PER_PAGE;
-  const paginatedCards = cardData.slice(startIndex, endIndex);
+  const paginatedCards = cards.slice(startIndex, endIndex);
+
+
+  
+  useEffect(() => {
+    const fetchCardDetails = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/server/fetch-card');
+        if (!response.ok) throw new Error("Failed to fetch cards");
+
+        const { data } = await response.json();
+        setCards(data || []);
+      } catch (err) {
+        console.error("Error fetching cards:", err);
+      }
+    };
+
+    fetchCardDetails();
+  }, []);
 
   return (
     <div className="min-h-screen px-8 py-10">
@@ -60,7 +67,7 @@ export default function YardPage() {
       <div className="mt-4 grid grid-cols-4 gap-4 mb-10">
         {paginatedCards.map((card) => (
           <div key={card.id} className="relative h-48 rounded bg-gray-200 p-2 flex flex-col">
-            <div className="flex-3">{card.name}</div>
+            <div className="flex-3">{card.card_name}</div>
             <div className="flex-1 overflow-y-auto flex flex-wrap gap-2 items-start">
               {card.tags.map((tag) => (
                 <span key={tag} className="rounded bg-red-300 px-2 py-1 text-xs text-white">
