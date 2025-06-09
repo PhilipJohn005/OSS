@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "server": "ts-node --project tsconfig.server.json server/add-cards.ts",
+    "dev:fullstack": "concurrently --names \"FRONTEND,BACKEND\" --prefix \"[{name}]\" --prefix-colors \"bgBlue.bold,bgMagenta.bold\" \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
     "@tabler/icons-react": "^3.34.0",
     "clsx": "^2.1.1",
     "cobe": "^0.6.4",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "framer-motion": "^12.16.0",
     "next": "15.3.3",
@@ -23,10 +26,12 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
     "@types/node": "^20.19.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.1.2",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
