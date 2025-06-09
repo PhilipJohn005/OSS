@@ -8,7 +8,20 @@ type Task = {
   tags: string[];
 };
 
-const App = () => {
+interface ToggleTagFn {
+    (tag: string): void;
+}
+interface AddCardRequest {
+    name: string;
+    tags: string[];
+}
+
+interface AddCardResponse {
+    message: string;
+    [key: string]: any;
+}
+
+const Add = () => {
   const [name, setName] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -16,43 +29,32 @@ const App = () => {
   const availableTags = ['AWS', 'GCP', 'Azure', 'React', 'Node.js', 'Python', 'Docker', 'Kubernetes'];
 
 
-  const toggleTag = (tag) => {
+  const toggleTag: ToggleTagFn = (tag) => {
     if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
+      setSelectedTags(selectedTags.filter((t: string) => t !== tag));
     } else {
       setSelectedTags([...selectedTags, tag]);
     }
   };
 
-  useEffect(()=>{
-    fetchTask();
 
-  },[])
-
-  const fetchTask=async()=>{
-    const {error,data}=await supabase.from("trial_run").select("*")
-    if(error){
-      console.log("Error reading tasks"+error.message);
-    }
-
-    setTasks(data ?? []);
-  }
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const res=await fetch("http://localhost:4000/server/add-card",{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
+    const body: AddCardRequest = { name, tags: selectedTags };
+
+    const res = await fetch("http://localhost:4000/server/add-card", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      body:JSON.stringify({name,tags:selectedTags})
-    })
-    
+      body: JSON.stringify(body)
+    });
+
     if (!res.ok) {
-    const error = await res.json();
-    console.error("Error:", error.message);
-    return;
+      const error: AddCardResponse = await res.json();
+      console.error("Error:", error.message);
+      return;
     }
 
     console.log("Added successfully");
@@ -120,4 +122,4 @@ const App = () => {
   )
 }
 
-export default App
+export default Add

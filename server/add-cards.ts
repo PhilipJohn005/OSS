@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
+
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
@@ -47,6 +48,21 @@ app.post('/server/add-card', async (req, res) => {
     res.status(500).json({ error: errorMessage });
   }
 });
+
+
+
+app.get('/server/fetch-card',async(req,res)=>{
+
+    const {error,data}=await supabase.from("cards").select("*")
+
+    if(error){
+        console.log("Error in reflecting data"+error.message);
+    }
+
+    res.json({ data });
+
+})
+
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
