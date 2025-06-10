@@ -28,7 +28,7 @@ const supabase = createClient(
 app.post('/server/add-card', async (req, res) => {
     const { name, tags } = req.body;
     const token = req.headers.authorization?.split(' ')[1];
-    if (!name || !tags) {
+    if (!name || !tags ||!token) {
       res.status(400).json({ error: "Name and tags and token are required" });
       return;
     }
@@ -72,6 +72,41 @@ app.get('/server/fetch-card',async(req,res)=>{
     res.json({ data });
 
 })
+
+
+app.get('/server/fetch-user-cards', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    res.status(401).json({ error: "Authorization token required" });
+    return;
+  }
+
+  try {
+    const decoded = jwt.verify(token as string, process.env.NEXTAUTH_SECRET as string);
+    let user_email: string | undefined;
+    if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
+      user_email = (decoded as jwt.JwtPayload).email as string;
+    } else {
+      res.status(401).json({ error: "Invalid token payload" });
+      return;
+    }
+    const { data, error } = await supabase
+      .from("cards")
+      .select("*")
+      .eq("user_email", user_email);
+
+    if (error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+
+    res.json({ data });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 const PORT = process.env.PORT || 4000;
