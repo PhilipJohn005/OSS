@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GitHubProvider from "next-auth/providers/github"
+import jwt from "jsonwebtoken";
 
 export const{
     handlers:{GET,POST},
@@ -24,5 +25,22 @@ export const{
     strategy: "jwt",
     maxAge: 60 * 60 * 24 * 10, // 10 days session expiry
   },
+  callbacks: {
+    async jwt({ token, account, profile }) {
+        if (account && profile) {
+            token.id = profile.id;        // GitHub ID
+            token.email = profile.email;  // GitHub Email
+        }
+        return token;
+    },
+    async session({ session, token }) {
+        // Optionally, add custom properties to session.user
+        session.user.id = String(token.id);
+        // If you want to include the signed JWT, add it as a custom property on session.user
+        (session.user as any).jwt = jwt.sign(token, process.env.NEXTAUTH_SECRET!);
+        return session;
+    },
+},
+
   secret: process.env.NEXTAUTH_SECRET,
 });
