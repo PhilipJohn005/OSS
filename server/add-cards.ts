@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken'
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
@@ -26,27 +27,36 @@ const supabase = createClient(
 
 app.post('/server/add-card', async (req, res) => {
     const { name, tags } = req.body;
-
-  if (!name || !tags) {
-    res.status(400).json({ error: "Name and tags are required" });
-    return;
-  }
-
-  try {
-    const { error } = await supabase
-      .from('cards')
-      .insert([{ card_name: name, tags }]);
-
-    if (error) {
-      throw error;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!name || !tags) {
+      res.status(400).json({ error: "Name and tags and token are required" });
+      return;
     }
 
-    res.status(200).json({ message: 'Card added successfully' });
-  } catch (error: unknown) {
-    console.error(error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    res.status(500).json({ error: errorMessage });
-  }
+    try {
+      const decoded = jwt.verify(token as string, process.env.NEXTAUTH_SECRET as string);
+      let user_email: string | undefined;
+      if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
+        user_email = (decoded as jwt.JwtPayload).email as string;
+      } else {
+        res.status(401).json({ error: "Invalid token payload" });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('cards')
+        .insert([{ card_name: name, tags, user_email }]);
+
+      if (error) {
+        throw error;
+      }
+
+      res.status(200).json({ message: 'Card added successfully' });
+    } catch (error: unknown) {
+      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      res.status(500).json({ error: errorMessage });
+    }
 });
 
 

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react';
 
 type Task = {
   id?: number;
@@ -21,13 +22,18 @@ interface AddCardResponse {
     [key: string]: any;
 }
 
+interface CustomSession {
+  accessToken?: string;
+  [key: string]: any;
+}
+
 const Add = () => {
   const [name, setName] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const availableTags = ['AWS', 'GCP', 'Azure', 'React', 'Node.js', 'Python', 'Docker', 'Kubernetes'];
-
+  const {data:session}=useSession() as { data: CustomSession | null };
 
   const toggleTag: ToggleTagFn = (tag) => {
     if (selectedTags.includes(tag)) {
@@ -47,6 +53,7 @@ const Add = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${(session?.user as any)?.jwt ?? ''}`,
       },
       body: JSON.stringify(body)
     });
@@ -63,9 +70,8 @@ const Add = () => {
   };
 
   return (
-    <div className='h-screen w-screen'>
-      <div className='flex flex-col items-center justify-center min-h-screen'>
-        <form onSubmit={handleSubmit} className='border border-black p-6 rounded-lg'>
+    <div className='h-screen w-screen px-4'>
+        <form onSubmit={handleSubmit} className='border border-black p-6 mt-2'>
           <div className='my-4'>
             <label className='px-4 block mb-2 font-medium'>Name</label>
             <input
@@ -117,7 +123,10 @@ const Add = () => {
             Delete
           </button>
         </div>
-      </div>
+
+        <div>
+          <h1>Your Help Requests</h1>
+        </div>
     </div>
   )
 }
