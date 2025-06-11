@@ -30,6 +30,8 @@ export const{
         if (account && profile) {
             token.id = profile.id;        // GitHub ID
             token.email = profile.email;  // GitHub Email
+            token.name = profile.name;         // GitHub Display Name (Full name)
+            token.username = profile.login;
         }
         return token;
     },
