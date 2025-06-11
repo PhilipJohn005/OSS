@@ -90,7 +90,8 @@ export default function YardPage() {
 
       <div className="mt-4 grid grid-cols-4 gap-4 mb-10">
         {paginatedCards.map((card) => (
-          <div key={card.id} className="relative h-48 rounded bg-gray-200 p-2 flex flex-col">
+          <Link key={card.id} href={`/yard/${card.id}`}>
+          <div key={card.id} className="relative h-48 rounded bg-gray-200 p-2 flex flex-col cursor-pointer">
             <div className="flex-3 font-semibold">{card.card_name}</div>
             <div className="flex-1 overflow-y-auto flex flex-wrap gap-2 items-start">
               {card.tags.map((tag) => (
@@ -100,6 +101,8 @@ export default function YardPage() {
               ))}
             </div>
           </div>
+          </Link>
+          
         ))}
       </div>
 
