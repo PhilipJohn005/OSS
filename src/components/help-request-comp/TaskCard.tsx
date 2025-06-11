@@ -1,42 +1,66 @@
-// components/TaskCard.tsx
+import React from 'react';
 
-import Link from 'next/link';
-
-type Task = {
-  id?: number;
-  card_name: string;
-  tags: string[];
+type TaskCardProps = {
+  task: {
+    card_name: string;
+    product_description?: string;
+    tags: string[];
+    issues: {
+      id: number;
+      title: string;
+      description: string;
+      link: string;
+      images: string[];
+    }[];
+  };
 };
 
-interface TaskCardProps {
-  task: Task;
-}
-
-const TaskCard: React.FC<TaskCardProps> = ({ task }) => (
-  <div className="flex-shrink-0 w-64 h-48 rounded bg-gray-200 p-2 flex flex-col">
-    <div className="flex-1">{task.card_name}</div>
-
-    <div className="flex items-center justify-center mt-1">
-      <Link href={`/yard/${task.id}`}>
-        <button className="bg-blue-300 cursor-pointer hover:bg-blue-600 px-4 py-2 rounded">
-          View
-        </button>
-      </Link>
+const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
+  return (
+    <div className="border p-4 rounded shadow w-[400px] min-w-[300px]">
+      <h2 className="text-xl font-bold">{task.card_name}</h2>
+      <p className="text-sm text-gray-700 mb-2">{task.product_description}</p>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {task.tags.map((tag, i) => (
+          <span key={i} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+            {tag}
+          </span>
+        ))}
+      </div>
+      <div className="mt-4 space-y-2">
+        <h3 className="font-semibold">Issues:</h3>
+        {task.issues.length > 0 ? (
+          task.issues.map((issue) => (
+            <div key={issue.id} className="border border-gray-200 rounded p-2">
+              <a
+                href={issue.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 hover:underline"
+              >
+                {issue.title}
+              </a>
+              <p className="text-sm text-gray-600">{issue.description.slice(0, 100)}...</p>
+              {Array.isArray(issue.images) && issue.images.length > 0 && (
+                <div className="mt-2 flex gap-2 overflow-x-auto">
+                  {issue.images.map((imgUrl, i) => (
+                    <img
+                      key={i}
+                      src={imgUrl}
+                      alt="Issue"
+                      className="h-20 w-20 object-cover border rounded"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm">No issues found</p>
+        )}
+      </div>
     </div>
-
-    <div className="space-x-4 mt-1.5">
-      <button className="p-2 bg-gray-600 rounded hover:bg-gray-300 transition">Edit</button>
-      <button className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition">Delete</button>
-    </div>
-
-    <div className="overflow-y-auto flex flex-wrap gap-2 items-start mt-1">
-      {task.tags.map((tag) => (
-        <span key={tag} className="rounded bg-red-300 px-2 py-1 text-xs text-white">
-          {tag}
-        </span>
-      ))}
-    </div>
-  </div>
-);
+  );
+};
 
 export default TaskCard;
