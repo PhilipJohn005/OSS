@@ -84,6 +84,7 @@ app.post('/server/add-card', async (req, res) => {
       title: iss.title,
       description: iss.body ?? '',
       link: iss.html_url,
+      issue_tags:iss.labels.map((label: any) => label.name),
       images: extractImagesFromMarkdown(iss.body ?? '')
     }));
 
@@ -153,6 +154,32 @@ app.get('/server/fetch-user-cards', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+app.get('/server/fetch-card-des/:id',async(req,res)=>{
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: 'Invalid ID format' });
+    return;
+  }
+  try {
+    const { data, error } = await supabase
+      .from('cards')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      res.status(404).json({ error: 'Card not found', detail: error });
+      return;
+    }
+
+     res.status(200).json({ data });
+  } catch (err) {
+    console.error('Error fetching card by ID:', err);
+    res.status(500).json({ error: 'Server error' });
+    return;
+  }
+})
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

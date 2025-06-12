@@ -4,40 +4,15 @@ import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react';
 import TaskCard from '@/components/help-request-comp/TaskCard';
 
-type Task = {
-  id?: number;
-  card_name: string;
-  tags: string[];
-  user_email: string;
-  product_description?: string;
-  issues: {
-    id: number;
-    title: string;
-    description: string;
-    link: string;
-    images: string[];
-  }[];
-};
+import {
+  Task,
+  ToggleTagFn,
+  AddCardRequest,
+  AddCardResponse,
+  CustomSession
+} from '@/components/help-request-comp/types';
 
-interface ToggleTagFn {
-  (tag: string): void;
-}
 
-interface AddCardRequest {
-  repo_url: string;
-  product_description: string;
-  tags: string[];
-}
-
-interface AddCardResponse {
-  message: string;
-  [key: string]: any;
-}
-
-interface CustomSession {
-  accessToken?: string;
-  [key: string]: any;
-}
 
 const Add = () => {
   const [repoUrl, setRepoUrl] = useState('');
@@ -52,7 +27,7 @@ const Add = () => {
     if (!session?.user?.jwt) return;
     const fetchCards = async () => {
       try {
-        const res = await fetch("http://localhost:4000/server/fetch-user-cards", {
+        const res = await fetch("https://oss-backend-2.onrender.com/server/fetch-user-cards", {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -85,7 +60,7 @@ const Add = () => {
       tags: selectedTags
     };
 
-    const res = await fetch("http://localhost:4000/server/add-card", {
+    const res = await fetch("https://oss-backend-2.onrender.com/server/add-card", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,7 +83,7 @@ const Add = () => {
   };
 
   return (
-    <div className='h-screen w-screen px-4 py-4'>
+    <div className='h-screen w-full px-4 py-4'>
       <form onSubmit={handleSubmit} className='border border-black p-6'>
 
         <div className='my-4'>
@@ -170,10 +145,17 @@ const Add = () => {
         <h1>Your Help Requests</h1>
         <div className="mt-4 mb-10">
           {tasks.length > 0 ? (
-            <div className="flex overflow-x-auto pb-2 gap-4">
-              {tasks.map((task, index) => (
-                <TaskCard key={index} task={task} />
-              ))}
+            <div className="relative">
+              <div className="flex overflow-x-auto pb-4 -mx-4 px-4">
+                <div className="flex space-x-4"> {/* Inner flex container for proper spacing */}
+                  {tasks.map((task, index) => (
+                    <div key={index} className="flex-shrink-0"> {/* Prevent card squishing */}
+                      <TaskCard task={task} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
             </div>
           ) : (
             <div>No help requests yet.</div>

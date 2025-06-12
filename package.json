@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "server": "ts-node --project tsconfig.server.json server/add-cards.ts",
+    "server": "ts-node --project tsconfig.server.json server/index.ts",
     "dev:fullstack": "concurrently --names \"FRONTEND,BACKEND\" --prefix \"[{name}]\" --prefix-colors \"bgBlue.bold,bgMagenta.bold\" \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
