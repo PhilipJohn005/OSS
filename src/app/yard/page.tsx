@@ -27,7 +27,7 @@ export default function YardPage() {
   useEffect(() => {
     const fetchCardDetails = async () => {
       try {
-        const response = await fetch('http://localhost:4000/server/fetch-card');
+        const response = await fetch('https://oss-backend-2.onrender.com/server/fetch-card');
         if (!response.ok) throw new Error("Failed to fetch cards");
         const { data } = await response.json();
         setCards(data || []);
@@ -91,11 +91,11 @@ export default function YardPage() {
       <div className="mt-4 grid grid-cols-4 gap-4 mb-10">
         {paginatedCards.map((card) => (
           <Link key={card.id} href={`/yard/${card.id}`}>
-          <div key={card.id} className="relative h-48 rounded bg-gray-200 p-2 flex flex-col cursor-pointer">
+          <div className="relative h-48 rounded bg-gray-200 p-2 flex flex-col cursor-pointer">
             <div className="flex-3 font-semibold">{card.card_name}</div>
             <div className="flex-1 overflow-y-auto flex flex-wrap gap-2 items-start">
-              {card.tags.map((tag) => (
-                <span key={tag} className="rounded bg-red-300 px-2 py-1 text-xs text-white">
+              {card.tags.map((tag,index) => (
+                <span key={`${tag}-${index}`} className="rounded bg-red-300 px-2 py-1 text-xs text-white">
                   {tag}
                 </span>
               ))}
