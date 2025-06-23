@@ -12,21 +12,16 @@ interface Issue {
   image?: string;
   description: string;
   card_id: string;
+  tags:string[];
 }
 
-export default function CardListener({
-  cardId,
-  onNewIssue,
-}: {
-  cardId: string;
-  onNewIssue: (issue: Issue) => void;
-}) {
+export default function CardListener({cardId,onNewIssue,}: {cardId: string;onNewIssue: (issue: Issue) => void;}) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     if (!cardId || typeof onNewIssue !== 'function') {
       if (process.env.NODE_ENV === 'development') {
-        console.error('❌ Invalid props passed to CardListener');
+        console.error('Invalid props passed to CardListener');
       }
       return;
     }
