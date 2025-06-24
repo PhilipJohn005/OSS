@@ -57,7 +57,7 @@ const Add = () => {
     const body: AddCardRequest = {
       repo_url: repoUrl,
       product_description: productDescription,
-      tags: selectedTags
+      tags: selectedTags,
     };
 
     const res = await fetch("https://oss-backend-2.onrender.com/server/add-card", {
@@ -71,6 +71,10 @@ const Add = () => {
 
     if (!res.ok) {
       const error: AddCardResponse = await res.json();
+      if (error?.error === 'GitHub access expired. Please log in again.') {
+        alert("GitHub access token expired. Webhook could not be created. Please re-login to enable full functionality later.");
+        return;
+      }
       console.error("Error:", error.message);
       return;
     }
