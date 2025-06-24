@@ -3,11 +3,12 @@
 import { signIn,signOut } from "@/auth";
 
 
-export async function doSocialLogin(formdata) {
-    const action: string | null = formdata.get('action');
-    await signIn(action as string, { redirectTo: '/' });  //signin automatically detects api/auth/[...nextauth]
-    console.log(action);
+export async function doSocialLogin(formdata: FormData) {
+  const action: string | null = formdata.get('action') as string | null;
+  await signIn(action ?? '', { redirectTo: '/' });
+  console.log(action);
 }
+
 
 
 export async function doLogout(){
