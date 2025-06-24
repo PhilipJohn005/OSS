@@ -1,7 +1,10 @@
 import './globals.css'
 import { SessionProvider } from "next-auth/react";
+import 'highlight.js/styles/vs2015.css';
 
-export default function RootLayout({ children }) {
+import { ReactNode } from 'react';
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html>
       <body>

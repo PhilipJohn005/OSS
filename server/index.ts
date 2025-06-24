@@ -41,7 +41,7 @@ function extractImagesFromMarkdown(md: string): string[] {
 }
 
 app.post('/server/add-card', async (req, res) => {
-  const { repo_url, product_description, tags, access_token } = req.body;
+  const { repo_url, product_description, tags } = req.body;
 
   const token = req.headers.authorization?.split(' ')[1];
 
@@ -51,9 +51,10 @@ app.post('/server/add-card', async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET as string) as any;
+    const decoded = jwt.verify(token, process.env.BACKEND_JWT_SECRET as string) as any;  //wrong will be caught in exception
     const user_email = decoded.email;
     const user_name = decoded.name;
+    const access_token=decoded.accessToken;
 
     const { owner, repo } = extractOwnerAndRepo(repo_url);
 
@@ -141,7 +142,12 @@ app.post('/server/add-card', async (req, res) => {
       const webhookJson: any = await webhookRes.json();
 
       if (!webhookRes.ok) {
-        console.warn("GitHub Webhook error:", webhookJson);
+        if (webhookRes.status === 401 || webhookJson?.message?.includes('Bad credentials')) {
+          res.status(403).json({ error: 'GitHub access expired. Please log in again.' });
+          return;
+        }
+        res.status(500).json({ error: 'Webhook creation failed. Check repo permissions or try again later.' });
+        return;
       } else {
         console.log("Webhook created with ID:", webhookJson.id);
       }
@@ -174,7 +180,7 @@ app.get('/server/fetch-user-cards', async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token as string, process.env.NEXTAUTH_SECRET as string);
+    const decoded = jwt.verify(token as string, process.env.BACKEND_JWT_SECRET as string);
     let user_email: string | undefined;
 
     if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
