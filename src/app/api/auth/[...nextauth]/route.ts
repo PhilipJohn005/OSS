@@ -1,1 +1,2 @@
-export {GET,POST} from '@/auth'; //any any req like api/auth/* will have to use GET,POST defined in auth.ts
+export {GET,POST} from '@/auth'; //any req like api/auth/* will have to use GET,POST defined in auth.ts
+//we need this specifically defined and exported from auth.ts so that nexauth will know that it has to use get/post specifically for requests from auth.ts
