@@ -60,7 +60,7 @@ const Add = () => {
       tags: selectedTags,
     };
 
-    const res = await fetch("https://oss-backend-2.onrender.com/server/add-card", {
+    const res = await fetch("http://localhost:4000/server/add-card", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -69,15 +69,16 @@ const Add = () => {
       body: JSON.stringify(body)
     });
 
-    if (!res.ok) {
-      const error: AddCardResponse = await res.json();
-      if (error?.error === 'GitHub access expired. Please log in again.') {
-        alert("GitHub access token expired. Webhook could not be created. Please re-login to enable full functionality later.");
+          if (!res.ok) {
+        const error: AddCardResponse = await res.json();
+        if (error?.error === 'GitHub access expired. Please log in again.') {
+          alert("GitHub access token expired. Webhook could not be created. Please re-login to enable full functionality later.");
+          return;
+        }
+        console.error("Error:", error?.message ?? error ?? 'Unknown error');
         return;
       }
-      console.error("Error:", error.message);
-      return;
-    }
+
 
     setShouldRunButtonEffect(prev => !prev);
     setRepoUrl('');
