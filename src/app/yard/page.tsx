@@ -14,6 +14,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import getEmbedding from "../../../lib/getEmbedding";
+import { supabase } from "../../../lib/supabase";
 
 const availableTags = [
   'AWS', 'GCP', 'Azure', 'React', 'Node.js', 'Python', 'Docker', 'Kubernetes', 'n8n',
@@ -28,7 +30,7 @@ const availableTags = [
 const CARDS_PER_PAGE = 8;
 
 interface Card {
-  id: string;
+  id: number;
   card_name: string;
   tags: string[];
   description?: string;
@@ -43,7 +45,8 @@ export default function YardPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]); 
   const [searchQuery,setSearchQuery]=useState<string | number | readonly string[] | undefined>('');
   const [showAllTags,setShowAllTags]=useState(false);
-  
+  const [isSearching,setIsSearching]=useState(false);
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -51,6 +54,38 @@ export default function YardPage() {
     setCurrentPage(1);
   };
 
+  const handleSearch = async () => {
+  if (!searchQuery || typeof searchQuery !== 'string' || !searchQuery.trim()) return;
+  const queryEmbedding = await getEmbedding(searchQuery.trim());
+  if (!queryEmbedding) return;
+  console.log(Array.from(queryEmbedding))
+
+    setIsSearching(true);
+    const { data, error } = await supabase.rpc('match_cards', {
+      query_embedding: Array.from(queryEmbedding),
+      match_threshold: 0.5,
+      match_count: 10,
+    });
+    setIsSearching(false);
+    if (error) {
+      console.error("Supabase RPC error:", error.message, error.details);
+      return;
+    }
+console.log("Raw data from Supabase:", data);
+
+    // Deduplicate by card_id
+    const uniqueCardsMap = new Map();
+    for (const row of data) {
+      if (!uniqueCardsMap.has(row.card_id)) {
+        uniqueCardsMap.set(row.card_id, row);
+      }
+    }
+    console.log("Check nw",uniqueCardsMap)
+    const dedupedResults = Array.from(uniqueCardsMap.values());
+    setCards(dedupedResults);
+    setCurrentPage(1);
+  };
+  
   useEffect(() => {
     const fetchCardDetails = async () => {
       try {
@@ -58,7 +93,7 @@ export default function YardPage() {
         if (!response.ok) throw new Error("Failed to fetch cards");
         const { data } = await response.json();
         setCards(data || []);
-      } catch (err) {
+      } catch (err){
         console.error("Error fetching cards:", err);
       }
     };
@@ -66,7 +101,7 @@ export default function YardPage() {
     fetchCardDetails();
   }, []);
 
-  // 🧠 Sort by how many selectedTags match the card's tags
+  // Sort by how many selectedTags match the card's tags
   const filteredCards = cards.filter(card => 
     selectedTags.length === 0 || 
     selectedTags.every(tag => card.tags.includes(tag))
@@ -102,17 +137,27 @@ export default function YardPage() {
           <p className="text-gray-600">Discover and contribute to amazing open source projects</p>
         </div>
 
-         <div className="mb-6">
-          <div className="relative">
+         <div className="mb-6 flex gap-2">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Search projects..."
+              placeholder="Type your project goal or interest (e.g. 'I want a Firebase Android repo')"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
+          <Button onClick={handleSearch} className={isSearching?"pointer-events-none opacity-50":"shrink-0 cursor-pointer"}>
+            {
+              isSearching?(
+                <h1>searching</h1>
+              ):(
+                <h1>Search</h1>
+              )
+            }
+          </Button>
         </div>
+
 
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
@@ -193,6 +238,13 @@ export default function YardPage() {
             {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
           </p>
       </div>
+        <div>
+          {
+            paginatedCards.length===0 && (
+              <div>No Repos of your requested issue found!</div>
+            )
+          }
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {paginatedCards.map((card) => (
             <Link key={card.id} href={`/yard/${card.id}`}>
