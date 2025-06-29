@@ -4,7 +4,7 @@ import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 import { fetch } from 'undici';
-
+import getEmbedding from './embed'
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
@@ -101,23 +101,32 @@ app.post('/server/add-card', async (req, res) => {
     const card_id = cardInsertData[0].id;
 
     // Step 2: Insert issues separately
-    const issues = issuesOnly.map((iss: any) => ({
-      card_id,
-      title: iss.title,
-      description: iss.body ?? '',
-      link: iss.html_url,
-      tags: iss.labels.map((label: any) => label.name),
-      image: extractImagesFromMarkdown(iss.body ?? '')[0] ?? null
-    }));
+    const issuesWithEmbeddings = await Promise.all(  //sabka await karo so that we get the proper updated data
+      issuesOnly.map(async (iss: any) => {
+        const combinedText = `${iss.title} ${iss.body ?? ''}`;
+        const embedding = await getEmbedding(combinedText);
 
-    if (issues.length > 0) {
+        return {
+          card_id,
+          title: iss.title,
+          description: iss.body ?? '',
+          embedding: Array.isArray(embedding) ? embedding : null,
+          link: iss.html_url,
+          tags: iss.labels.map((label: any) => label.name),
+          image: extractImagesFromMarkdown(iss.body ?? '')[0] ?? null
+        };
+      })
+    );
+
+    const validIssues=issuesWithEmbeddings.filter((issue)=>issue.embedding!==null)
+
+    if (validIssues.length > 0) {
       const { error: issueError } = await supabase
         .from('issues')
-        .insert(issues);
+        .insert(validIssues);
       if (issueError) throw issueError;
     }
 
-    res.status(200).json({ message: 'Card and issues added', issuesCount: issues.length });
 
     // Step 3: GitHub webhook creation
     try {
@@ -144,15 +153,29 @@ app.post('/server/add-card', async (req, res) => {
       if (!webhookRes.ok) {
         if (webhookRes.status === 401 || webhookJson?.message?.includes('Bad credentials')) {
           res.status(403).json({ error: 'GitHub access expired. Please log in again.' });
+          
+        }
+        if (
+          webhookRes.status === 422 &&
+          webhookJson?.errors?.some((err: any) => err.message === 'Hook already exists on this repository')
+        ) {
+          console.warn("ℹ️ Webhook already exists, continuing...");
+          // Do NOT treat this as failure — just proceed
+          res.status(200).json({ message: 'Card and issues added (webhook already exists)', issuesCount: validIssues.length });
           return;
         }
+        
         res.status(500).json({ error: 'Webhook creation failed. Check repo permissions or try again later.' });
+        
         return;
-      } else {
-        console.log("Webhook created with ID:", webhookJson.id);
-      }
+      } 
+      res.status(200).json({ message: 'Card and issues added', issuesCount: validIssues.length });
+      return;
+
     } catch (err) {
       console.error("Webhook creation failed:", err);
+      res.status(500).json({ error: 'Unexpected error during webhook setup' }); // ✅ THIS LINE IS NEEDED
+      return;
     }
 
   } catch (error: any) {
@@ -206,6 +229,7 @@ app.get('/server/fetch-user-cards', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 app.get('/server/fetch-card-des/:id', async (req, res) => {
