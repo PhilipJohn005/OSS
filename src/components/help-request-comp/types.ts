@@ -4,6 +4,11 @@ export type Task = {
   tags: string[];
   user_email: string;
   product_description?: string;
+  repo_url:string;
+  stars?:number;
+  open_issues_count?:number
+  forks:number;
+  top_language:string
   issues: {
     id: number;
     title: string;
