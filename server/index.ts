@@ -40,6 +40,8 @@ function extractImagesFromMarkdown(md: string): string[] {
   return urls;
 }
 
+
+
 app.post('/server/add-card', async (req, res) => {
   const { repo_url, product_description, tags } = req.body;
 
@@ -50,13 +52,56 @@ app.post('/server/add-card', async (req, res) => {
     return;
   }
 
-  try {
+  try{
     const decoded = jwt.verify(token, process.env.BACKEND_JWT_SECRET as string) as any;  //wrong will be caught in exception
     const user_email = decoded.email;
     const user_name = decoded.name;
     const access_token=decoded.accessToken;
 
     const { owner, repo } = extractOwnerAndRepo(repo_url);
+
+    // 🔥 1. Get repo metadata
+      const repoDetailsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          'User-Agent': 'OSS-Hub-App',
+          Accept: 'application/vnd.github.v3+json',
+        }
+      });
+      const repoDetails = await repoDetailsRes.json();
+
+      if (!repoDetailsRes.ok) {
+        const details = repoDetails as { message?: string };
+        throw new Error(`GitHub repo details error: ${details.message || 'unknown error'}`);
+      }
+
+      const { stargazers_count, forks_count } = repoDetails as { stargazers_count?: number; forks_count?: number };
+      const stars = stargazers_count || 0;
+      const forks = forks_count || 0;
+
+      // 🔥 2. Get language stats
+      const langRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, {
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          'User-Agent': 'OSS-Hub-App',
+          Accept: 'application/vnd.github.v3+json',
+        }
+      });
+      const langJson = await langRes.json();
+
+      if (!langRes.ok) {
+        const langErr = langJson as { message?: string };
+        throw new Error(`GitHub languages API error: ${langErr.message || 'unknown error'}`);
+      }
+
+      const topLanguage = Object.entries(langJson as Record<string, number>)
+        .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
+
+      // 🔥 3. Get collaborators
+      
+
+
+
 
     // Fetch issues from GitHub
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=100`;
@@ -80,19 +125,25 @@ app.post('/server/add-card', async (req, res) => {
     }
 
     const issuesOnly = issuesJson.filter((issue: any) => !issue.pull_request);
+    const openIssuesCount = issuesOnly.length;
 
     // Step 1: Insert card (without issues)
     const { data: cardInsertData, error: cardError } = await supabase
-      .from('cards')
-      .insert([{
-        card_name: repo,
-        repo_url,
-        tags,
-        user_email,
-        user_name,
-        product_description,
-      }])
-      .select('id');
+    .from('cards')
+    .insert([{
+      card_name: repo,
+      repo_url,
+      tags,
+      user_email,
+      user_name,
+      product_description,
+      stars,
+      forks,
+      top_language: topLanguage,
+      open_issues_count: openIssuesCount
+    }])
+    .select('id');
+
 
     if (cardError || !cardInsertData || cardInsertData.length === 0) {
       throw new Error(cardError?.message || 'Failed to insert card');
@@ -177,12 +228,14 @@ app.post('/server/add-card', async (req, res) => {
       res.status(500).json({ error: 'Unexpected error during webhook setup' }); // ✅ THIS LINE IS NEEDED
       return;
     }
-
-  } catch (error: any) {
+  }
+   catch (error: any) {
     console.error('ADD-CARD ERROR:', error);
     res.status(500).json({ error: error.message || 'Unknown error' });
   }
 });
+
+
 
 app.get('/server/fetch-card', async (req, res) => {
   const { error, data } = await supabase.from('cards').select('*');
