@@ -82,10 +82,10 @@ const HomePage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Why Choose OSS - HUB?
+              Why Choose DevLinkr?
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Built for developers, by developers. Our platform makes it easy to
+              Built for developers, by developers. Our platform makes it easy for Beginners to
               discover, contribute to, and showcase open source projects.
             </p>
           </div>
@@ -103,7 +103,7 @@ const HomePage = () => {
             </Card>
             <Card>
               <CardHeader>
-                <Users className="w-8 h-8 text-blue-600 mb-3" />
+                <Activity className="w-8 h-8 text-blue-600 mb-3" />
                 <CardTitle>Community Driven</CardTitle>
                 <CardDescription>
                   Connect with like-minded developers and contribute to meaningful
@@ -113,10 +113,10 @@ const HomePage = () => {
             </Card>
             <Card>
               <CardHeader>
-                <Activity className="w-8 h-8 text-blue-600 mb-3" />
-                <CardTitle>Developer Timeline</CardTitle>
+                <Users className="w-8 h-8 text-blue-600 mb-3" />
+                <CardTitle>Beginner Centric</CardTitle>
                 <CardDescription>
-                  Track your contributions and present them with clarity.
+                  Made For Beginners in the Tech World to find and contribute to Open Source
                 </CardDescription>
               </CardHeader>
             </Card>
