@@ -41,8 +41,41 @@ function extractImagesFromMarkdown(md: string): string[] {
 }
 
 
+async function fetchAllIssues(owner: string, repo: string): Promise<any[]> {
+  let allIssues: any[] = [];
+  let page = 1;
+
+  while (true) {
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=100&page=${page}`;
+
+    const res = await fetch(apiUrl, {
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`,
+        'User-Agent': 'OSS-Hub-App',
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(`GitHub API error on page ${page}: ${err || JSON.stringify(err)}`);
+    }
+
+    const pageIssues = await res.json() as any[];
+
+    if (pageIssues.length === 0) break; // done
+    allIssues.push(...pageIssues);
+    page++;
+  }
+
+  return allIssues;
+}
+
+
 
 app.post('/server/add-card', async (req, res) => {
+  console.log("🔥 /server/add-card endpoint hit");
+
   const { repo_url, product_description, tags } = req.body;
 
   const token = req.headers.authorization?.split(' ')[1];
@@ -75,7 +108,7 @@ app.post('/server/add-card', async (req, res) => {
         throw new Error(`GitHub repo details error: ${details.message || 'unknown error'}`);
       }
 
-      const { stargazers_count, forks_count } = repoDetails as { stargazers_count?: number; forks_count?: number };
+      const { stargazers_count, forks_count,description } = repoDetails as { stargazers_count?: number; forks_count?: number;description?:string };
       const stars = stargazers_count || 0;
       const forks = forks_count || 0;
 
@@ -96,29 +129,12 @@ app.post('/server/add-card', async (req, res) => {
 
       const topLanguage = Object.entries(langJson as Record<string, number>)
         .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
-
-      // 🔥 3. Get collaborators
       
 
-
-
-
     // Fetch issues from GitHub
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/issues?state=open&per_page=100`;
-    const ghRes = await fetch(apiUrl, {
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        'User-Agent': 'OSS-Hub-App',
-        Accept: 'application/vnd.github.v3+json',
-      },
-    });
+   
 
-    if (!ghRes.ok) {
-      const err = await ghRes.json();
-      throw new Error(`GitHub API error: ${err || JSON.stringify(err)}`);
-    }
-
-    const issuesJson = await ghRes.json();
+    const issuesJson = await fetchAllIssues(owner, repo);
 
     if (!Array.isArray(issuesJson)) {
       throw new Error('GitHub API did not return an array of issues');
@@ -126,6 +142,13 @@ app.post('/server/add-card', async (req, res) => {
 
     const issuesOnly = issuesJson.filter((issue: any) => !issue.pull_request);
     const openIssuesCount = issuesOnly.length;
+    
+    const combinedRepoText = `${repo} ${description ?? ''} ${product_description}`;
+    const combinedRepoTextEmbedding=await getEmbedding(combinedRepoText);
+    console.log("[🧠 Embedding result]", combinedRepoTextEmbedding);
+
+   console.log("[🔍 combinedRepoText]", combinedRepoText);
+
 
     // Step 1: Insert card (without issues)
     const { data: cardInsertData, error: cardError } = await supabase
@@ -140,7 +163,8 @@ app.post('/server/add-card', async (req, res) => {
       stars,
       forks,
       top_language: topLanguage,
-      open_issues_count: openIssuesCount
+      open_issues_count: openIssuesCount,
+      embedding: Array.isArray(combinedRepoTextEmbedding) ? combinedRepoTextEmbedding : null
     }])
     .select('id');
 
@@ -153,8 +177,9 @@ app.post('/server/add-card', async (req, res) => {
 
     // Step 2: Insert issues separately
     const issuesWithEmbeddings = await Promise.all(  //sabka await karo so that we get the proper updated data
-      issuesOnly.map(async (iss: any) => {
-        const combinedText = `${iss.title} ${iss.body ?? ''}`;
+      issuesOnly.map(async (iss: any,index:number) => {
+         const combinedText = `${iss.title} ${iss.body ?? ''}`;
+
         const embedding = await getEmbedding(combinedText);
 
         return {

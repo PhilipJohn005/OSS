@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ChevronUp,ChevronDown,Users,AlertCircle,Filter,Search,Github,Star, Code,GitFork } from "lucide-react";
-import { 
+import { ChevronUp, ChevronDown, AlertCircle, Filter, Search, Github, Star, Code, GitFork } from "lucide-react";
+import {
   Pagination,
   PaginationContent,
   PaginationItem,
@@ -32,21 +32,33 @@ const CARDS_PER_PAGE = 6;
 interface Card {
   id: number;
   card_name: string;
+  link: string;
   tags: string[];
   product_description?: string;
-  top_language?:string;
+  top_language?: string;
   stars?: number;
-  forks?:number;
+  forks?: number;
   open_issues_count?: number;
+}
+
+// ✅ Utility function to remove duplicates by card ID
+function deduplicateCards(cards: Card[]): Card[] {
+  const seen = new Map<number, Card>();
+  for (const card of cards) {
+    if (!seen.has(card.id)) {
+      seen.set(card.id, card);
+    }
+  }
+  return Array.from(seen.values());
 }
 
 export default function YardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [cards, setCards] = useState<Card[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]); 
-  const [searchQuery,setSearchQuery]=useState<string | number | readonly string[] | undefined>('');
-  const [showAllTags,setShowAllTags]=useState(false);
-  const [isSearching,setIsSearching]=useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string | number | readonly string[] | undefined>('');
+  const [showAllTags, setShowAllTags] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -59,52 +71,52 @@ export default function YardPage() {
     if (!searchQuery || typeof searchQuery !== 'string' || !searchQuery.trim()) return;
     const queryEmbedding = await getEmbedding(searchQuery.trim());
     if (!queryEmbedding) return;
-    console.log(Array.from(queryEmbedding))
 
-      setIsSearching(true);
-      const { data, error } = await supabase.rpc('match_cards', {
-        query_embedding: Array.from(queryEmbedding),
-        match_threshold: 0.5,
-        match_count: 10,
-      });
-      setIsSearching(false);
-      if (error) {
-        console.error("Supabase RPC error:", error.message, error.details);
-        return;
-      }
-      console.log("Raw data from Supabase:", data);
+    setIsSearching(true);
+    const { data, error } = await supabase.rpc('match_cards', {
+      query_embedding: Array.from(queryEmbedding),
+      match_threshold: 0.6,
+      match_count: 10,
+    });
+    setIsSearching(false);
 
-      // Deduplicate by card_id
-      const uniqueCardsMap = new Map();
-      for (const row of data) {
-        if (!uniqueCardsMap.has(row.card_id)) {
-          uniqueCardsMap.set(row.card_id, row);
-        }
-      }
-      console.log("Check nw",uniqueCardsMap)
-      const dedupedResults = Array.from(uniqueCardsMap.values());
-      setCards(dedupedResults);
-      setCurrentPage(1);
+    if (error) {
+      console.error("Supabase RPC error:", error.message, error.details);
+      return;
+    }
+
+    const mappedCards = (data || []).map((row:any) => ({
+      id: row.card_id,
+      card_name: row.card_name,
+      product_description: row.description,
+      tags: row.tags,
+      link: row.repo_url,
+      top_language: row.top_language,
+      stars: row.stars,
+      forks: row.forks,
+      open_issues_count: row.open_issues_count,
+    }));
+
+    setCards(deduplicateCards(mappedCards));
+    setCurrentPage(1);
   };
-  
+
   useEffect(() => {
     const fetchCardDetails = async () => {
       try {
         const response = await fetch('https://oss-backend-2.onrender.com/server/fetch-card');
         if (!response.ok) throw new Error("Failed to fetch cards");
         const { data } = await response.json();
-        setCards(data || []);
-      } catch (err){
+        setCards(deduplicateCards(data || []));
+      } catch (err) {
         console.error("Error fetching cards:", err);
       }
     };
-
     fetchCardDetails();
   }, []);
 
-  // Sort by how many selectedTags match the card's tags
-  const filteredCards = cards.filter(card => 
-    selectedTags.length === 0 || 
+  const filteredCards = cards.filter(card =>
+    selectedTags.length === 0 ||
     selectedTags.every(tag => card.tags.includes(tag))
   );
 
@@ -112,12 +124,10 @@ export default function YardPage() {
   const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
   const endIndex = startIndex + CARDS_PER_PAGE;
   const paginatedCards = filteredCards.slice(startIndex, endIndex);
-
   const displayedTags = showAllTags ? availableTags : availableTags.slice(0, 10);
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       <header className="bg-white shadow-sm border-b">
         <div className="items-center justify-between mx-auto max-w-6xl px-6 py-4 flex">
           <div className="items-center flex gap-3">
@@ -126,9 +136,7 @@ export default function YardPage() {
             </div>
             <h1 className="text-xl font-bold text-gray-900">DevLinkr</h1>
           </div>
-            <Button>
-              + Add Project
-            </Button>           
+          <Button>+ Add Project</Button>
         </div>
       </header>
 
@@ -138,7 +146,7 @@ export default function YardPage() {
           <p className="text-gray-600">Discover and contribute to amazing open source projects</p>
         </div>
 
-         <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex gap-2">
           <div className="relative w-full">
             <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <Input
@@ -148,36 +156,28 @@ export default function YardPage() {
               className="pl-10"
             />
           </div>
-          <Button onClick={handleSearch} className={isSearching?"pointer-events-none opacity-50":"shrink-0 cursor-pointer"}>
-            {
-              isSearching?(
-                <h1>searching</h1>
-              ):(
-                <h1>Search</h1>
-              )
-            }
+          <Button onClick={handleSearch} className={isSearching ? "pointer-events-none opacity-50" : "shrink-0 cursor-pointer"}>
+            {isSearching ? "Searching..." : "Search"}
           </Button>
         </div>
 
-
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
             <Filter className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">Filter by technology:</span>
-        </div>
+          </div>
 
-        <div className="flex gap-2 flex-wrap">
-
-          {displayedTags.map((tag) => {
-            const countWithTag = cards.filter(card => card.tags.includes(tag)).length;
-            const countWithSelected = selectedTags.length > 0 
-              ? cards.filter(card => 
-                  selectedTags.every(t => card.tags.includes(t)) && 
-                  card.tags.includes(tag)
-                ).length
-              : countWithTag;
-            return (
-              <Button
+          <div className="flex gap-2 flex-wrap">
+            {displayedTags.map((tag) => {
+              const countWithTag = cards.filter(card => card.tags.includes(tag)).length;
+              const countWithSelected = selectedTags.length > 0
+                ? cards.filter(card =>
+                    selectedTags.every(t => card.tags.includes(t)) &&
+                    card.tags.includes(tag)
+                  ).length
+                : countWithTag;
+              return (
+                <Button
                   key={tag}
                   variant={selectedTags.includes(tag) ? "default" : "outline"}
                   size="sm"
@@ -188,8 +188,9 @@ export default function YardPage() {
                 </Button>
               );
             })}
-        </div>
-        <Button
+          </div>
+
+          <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowAllTags(!showAllTags)}
@@ -231,21 +232,19 @@ export default function YardPage() {
               </Button>
             </div>
           )}
-        
-      </div>
-      <div className="mb-6 flex justify-between items-center">
+        </div>
+
+        <div className="mb-6 flex justify-between items-center">
           <p className="text-gray-600">
             Showing {paginatedCards.length} of {filteredCards.length} project{filteredCards.length !== 1 ? 's' : ''}
             {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
           </p>
-      </div>
-        <div>
-          {
-            paginatedCards.length===0 && (
-              <div>No Repos of your requested issue found!</div>
-            )
-          }
         </div>
+
+        {paginatedCards.length === 0 && (
+          <div>No Repos of your requested issue found!</div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-10">
           {paginatedCards.map((card) => (
             <Link key={card.id} href={`/yard/${card.id}`}>
@@ -261,7 +260,6 @@ export default function YardPage() {
                 </CardHeader>
 
                 <CardContent className="pt-2 space-y-4">
-                  {/* Stats */}
                   <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
                     <div className="flex items-center gap-1">{card.top_language || "null"}</div>
                     <div className="flex items-center gap-1">
@@ -272,17 +270,15 @@ export default function YardPage() {
                       <GitFork className="w-3 h-3" />
                       {card.forks || 0}
                     </div>
-                    
                     <div className="flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
                       {card.open_issues_count || 0}
                     </div>
                   </div>
 
-                  {/* Tags */}
                   <div className="flex flex-wrap gap-2">
-                    {card.tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs rounded-full px-2 py-0.5 capitalize tracking-wide">
+                    {card.tags.slice(0, 3).map((tag, index) => (
+                      <Badge key={`${tag}-${index}`} variant="secondary" className="text-xs rounded-full px-2 py-0.5 capitalize tracking-wide">
                         {tag}
                       </Badge>
                     ))}
@@ -298,17 +294,16 @@ export default function YardPage() {
           ))}
         </div>
 
-
-      {totalPages > 1 && (
+        {totalPages > 1 && (
           <Pagination className="mt-8">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
-              
+
               {[...Array(totalPages)].map((_, i) => (
                 <PaginationItem key={i}>
                   <PaginationLink
@@ -320,9 +315,9 @@ export default function YardPage() {
                   </PaginationLink>
                 </PaginationItem>
               ))}
-              
+
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
@@ -330,9 +325,7 @@ export default function YardPage() {
             </PaginationContent>
           </Pagination>
         )}
-
-    </div>
-
+      </div>
     </div>
   );
 }
