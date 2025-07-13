@@ -2,18 +2,24 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import CardListener from '@/app/actions/cardlistener';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeSanitize from 'rehype-sanitize'
 import rehypeRaw from 'rehype-raw';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ExternalLink, Github, User, Calendar, Star, AlertCircle, Copy, Check, ArrowLeft, Tag, GitBranch, Users,GitFork } from 'lucide-react';
+import Link from 'next/link';
+import CardListener from '@/app/actions/cardlistener'; 
 
 interface Issue {
   title: string;
   link: string;
   image?: string;
   description: string;
-  tags:string[];
+  tags: string[];
 }
 
 interface CardDetails {
@@ -24,8 +30,11 @@ interface CardDetails {
   product_description: string;
   tags: string[];
   issues: Issue[];
+  stars?: number;
+  forks?:number;
+  contributors?: number;
+  lastUpdated?: string;
 }
-
 
 const CardDetailsPage = () => {
   const params = useParams();
@@ -33,22 +42,15 @@ const CardDetailsPage = () => {
 
   const [card, setCard] = useState<CardDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchCard = async () => {
       try {
-        console.log('Fetching card with ID:', id);
         const res = await fetch(`https://oss-backend-2.onrender.com/server/fetch-card-des/${id}`);
         const json = await res.json();
-
-        if (!json?.data) {
-          console.error('No data in fetch response:', json);
-          return;
-        }
-
-        console.log('Card data fetched:', json.data);
-        setCard(json.data);
+        if (json?.data) setCard(json.data);
       } catch (err) {
         console.error('Error fetching card details:', err);
       } finally {
@@ -59,15 +61,34 @@ const CardDetailsPage = () => {
     if (id) fetchCard();
   }, [id]);
 
-  const toggleIssue = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const copyRepoUrl = async () => {
+    if (card?.repo_url) {
+      await navigator.clipboard.writeText(card.repo_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
-  if (loading) return <div className="text-white p-6">Loading...</div>;
-  if (!card) return <div className="text-red-400 p-6">Card not found</div>;
+  const toggleIssueExpansion = (index: number) => {
+    const updated = new Set(expandedIssues);
+    updated.has(index) ? updated.delete(index) : updated.add(index);
+    setExpandedIssues(updated);
+  };
+
+  const truncateText = (text: string | null | undefined, maxLength = 200) => {
+  if (!text) return '';
+  const plain = text.replace(/[#*`\[\]()]/g, '').trim();
+  return plain.length <= maxLength ? text : plain.slice(0, maxLength) + '...';
+};
+
+
+  if (loading) return <div className="min-h-screen flex justify-center items-center text-gray-600">Loading project details...</div>;
+  if (!card) return <div className="min-h-screen flex justify-center items-center text-red-500">Card not found</div>;
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white px-6 py-10">
+    <div className="min-h-screen bg-gray-50">
+
+      {/* ✅ Realtime listener */}
       <CardListener
         cardId={id}
         onNewIssue={(newIssue) => {
@@ -83,100 +104,128 @@ const CardDetailsPage = () => {
         }}
       />
 
-
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold">{card.card_name}</h1>
-
-        <div className="bg-zinc-800 p-4 rounded-xl shadow-md space-y-2">
-          <p>
-            <strong>Repo Link:</strong>{' '}
-            <a href={card.repo_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
-              {card.repo_url}
-            </a>
-          </p>
-          <p><strong>Posted By:</strong> {card.user_name}</p>
+      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/yard">
+            <Button variant="ghost">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Projects
+            </Button>
+          </Link>
         </div>
+      </header>
 
-        <h1 className="text-3xl font-bold">Description</h1>
-        <div className="bg-zinc-800 p-4 rounded-xl shadow-md space-y-2">
-          <p>{card.product_description}</p>
-        </div>
-
-        {card?.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            <h2 className="text-xl font-semibold w-full">Tags:</h2>
-            {card.tags.map((tag, idx) => (
-              <span key={idx} className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold mt-4">Issues</h2>
-          {card.issues.length === 0 && <p className="text-gray-400">No issues listed.</p>}
-
-          {card.issues.map((issue, index) => (
-            <div key={index} className="bg-zinc-800 p-4 rounded-xl shadow-md">
-              <button
-                onClick={() => toggleIssue(index)}
-                className="text-left text-xl font-semibold w-full hover:underline focus:outline-none"
-              >
-                {issue.title}
-              </button>
-              <div>
-                {issue?.tags?.map((tag,idx)=>(
-                  <span key={`${tag}-${index}`} className='rounded bg-red-300 px-2 py-1 text-xs text-white'>
-                    {tag}
-                  </span>
-                ))}
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        <Card className="p-8 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{card.card_name}</h1>
+              <div className="flex flex-wrap gap-6 text-gray-600">
+                <div className="flex items-center gap-2"><User className="w-4 h-4" />{card.user_name}</div>
+                <div className="flex items-center gap-2"><Github className="w-4 h-4" />{card.stars || 0} stars</div>
+                <div className="flex items-center gap-2"><GitFork className="w-4 h-4" />{card.forks || 0} Forks</div>
               </div>
-
-              {openIndex === index && (
-                <div className="mt-2 space-y-2">
-                  <div className="
-                    prose prose-invert 
-                  prose-a:text-blue-400 
-                  prose-code:text-white 
-                    prose-code:px-1 
-                    prose-code:rounded 
-                  prose-pre:text-white 
-                    prose-pre:p-4 
-                    prose-pre:rounded 
-                    prose-pre:overflow-x-auto 
-                    text-sm max-w-none"
-                  >
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw,rehypeHighlight]}
-                      
-                      >
-                       {issue.description}
-                    </ReactMarkdown>
-
-                  </div>
-
-
-                  <a
-                    href={issue.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 underline text-sm"
-                  >
-                    {issue.link}
-                  </a>
-                  {issue.image && (
-                    <div className="mt-2">
-                      <img src={issue.image} alt={issue.title} className="rounded-md max-h-40 object-cover" />
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
-          ))}
+            <div className="flex gap-3">
+              <Button onClick={copyRepoUrl} variant="outline">
+                {copied ? <Check className="w-4 h-4 mr-2 text-green-600" /> : <Copy className="w-4 h-4 mr-2" />}
+                {copied ? 'Copied!' : 'Copy URL'}
+              </Button>
+              <a href={card.repo_url} target="_blank" rel="noopener noreferrer">
+                <Button><ExternalLink className="w-4 h-4 mr-2" />View Repo</Button>
+              </a>
+            </div>
+          </div>
+        </Card>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader><CardTitle className='flex'><GitBranch className="w-5 h-5 text-blue-600 mr-2" />Project Description</CardTitle></CardHeader>
+              <CardContent><div className="prose max-w-none"><ReactMarkdown>{card.product_description}</ReactMarkdown></div></CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className='flex'><AlertCircle className="w-5 h-5 text-orange-600 mr-2" />Open Issues</CardTitle></CardHeader>
+              <CardContent className="space-y-6">
+                {card.issues.length === 0 ? (
+                  <p className="text-gray-500">No issues listed.</p>
+                ) : card.issues.map((issue, index) => (
+                  <div key={index} className="border rounded-lg p-6 bg-white">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="font-semibold text-gray-900 text-lg pr-4">{issue.title}</h3>
+                      <a href={issue.link} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="outline"><ExternalLink className="w-4 h-4 mr-1" />View</Button>
+                      </a>
+                    </div>
+                    {issue.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {issue.tags.map(tag => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
+                      </div>
+                    )}
+                    <div className="mb-4">
+                      {expandedIssues.has(index) ? (
+                        <div className="prose max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight,rehypeSanitize]}>{issue.description}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 leading-relaxed">{truncateText(issue.description)}</p>
+                      )}
+                     {issue.description && issue.description.length > 200 && (
+
+                        <Button variant="ghost" size="sm" onClick={() => toggleIssueExpansion(index)} className="mt-2 text-blue-600">
+                          {expandedIssues.has(index) ? 'Show Less' : 'Read More'}
+                        </Button>
+                      )}
+                    </div>
+                    {issue.image && <img src={issue.image} alt={issue.title} className="rounded max-h-40 object-cover border" />}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            {card.tags.length > 0 && (
+              <Card>
+                <CardHeader><CardTitle className='flex'><Tag className="w-4 h-4 text-blue-600 mr-2" />Technologies</CardTitle></CardHeader>
+                <CardContent className="flex flex-wrap gap-2">
+                  {card.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader><CardTitle>Project Statistics</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>Stars</span><span>{card.stars || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>Forks</span><span>{card.forks || 0}</span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-700">
+                  <span>Issues</span><span>{card.issues.length || 0}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Maintainer</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                    <User className="text-white w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{card.user_name}</p>
+                    <p className="text-sm text-gray-600">Project Creator</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
