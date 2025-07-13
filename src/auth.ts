@@ -71,6 +71,7 @@ export const {
 
     async session({ session, token }) {
       session.user.id = String(token.id);
+      (session.user as any).username = token.username;
       (session.user as any).jwt = jwt.sign({
           id: token.id,
           name: token.name,
