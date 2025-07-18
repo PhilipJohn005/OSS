@@ -25,6 +25,8 @@ import {
   BookOpen,
   ArrowLeft,
 } from "lucide-react";
+import { useParams } from "next/navigation";
+
 
 interface Achievement {
   id: string;
@@ -36,18 +38,15 @@ interface Achievement {
 }
 
 
-async function fetchUserStats(username: string, accessToken: string) {
-  const headers = {
-    Authorization: `token ${accessToken}`,
-    Accept: "application/vnd.github+json",
-  };
+async function fetchUserStats(username: string) {
+
 
   const [userRes, prRes, issueRes, eventRes, reposRes] = await Promise.all([
-    fetch(`https://api.github.com/users/${username}`, { headers }),
-    fetch(`https://api.github.com/search/issues?q=is:pr+author:${username}+is:public`, { headers }),
-    fetch(`https://api.github.com/search/issues?q=is:issue+author:${username}+is:public+is:closed`, { headers }),
-    fetch(`https://api.github.com/users/${username}/events/public`, { headers }),
-    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, { headers }),
+    fetch(`https://api.github.com/users/${username}`),
+    fetch(`https://api.github.com/search/issues?q=is:pr+author:${username}+is:public`),
+    fetch(`https://api.github.com/search/issues?q=is:issue+author:${username}+is:public+is:closed`),
+    fetch(`https://api.github.com/users/${username}/events/public`),
+    fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`),
   ]);
 
   const userData = await userRes.json();
@@ -138,28 +137,22 @@ const getRarityBorder = (rarity: string) => {
   }
 };
 
+
 const DashboardPage = () => {
   const { data: session, status } = useSession() 
   
+  const params =useParams();
   const router = useRouter();
   const [userStats, setUserStats] = useState<any>(null);      
+  const username=params.name as string;
 
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.name) {
-        const jwtPayload = (session.user as any).jwt
-            ? JSON.parse(atob((session.user as any).jwt.split('.')[1])) // decode JWT payload
-            : null;
-
-        const username = jwtPayload?.username;
-        const accessToken = jwtPayload?.accessToken;
-
-        if (username && accessToken) {
-            fetchUserStats(username, accessToken).then(setUserStats);
-        }
+  useEffect(()=>{
+    if(username){
+      fetchUserStats(username).then(setUserStats);
     }
+  },[username])
 
-}, [status, session]);
-
+ 
 
   if (!userStats) return <div className="p-6 text-gray-600">Loading dashboard...</div>;
 
