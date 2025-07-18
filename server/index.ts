@@ -9,7 +9,22 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = ['https://oss-main-website.vercel.app' , 'http://localhost:3000'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, 
+}));
+
+
+
 app.use(express.json());
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -94,6 +109,8 @@ app.post('/server/add-card', async (req, res) => {
     const { owner, repo } = extractOwnerAndRepo(repo_url);
 
     // 🔥 1. Get repo metadata
+    console.time("🐙 Fetch repo details");
+
       const repoDetailsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
         headers: {
           Authorization: `token ${GITHUB_TOKEN}`,
@@ -102,6 +119,7 @@ app.post('/server/add-card', async (req, res) => {
         }
       });
       const repoDetails = await repoDetailsRes.json();
+    console.timeEnd("🐙 Fetch repo details");
 
       if (!repoDetailsRes.ok) {
         const details = repoDetails as { message?: string };
@@ -113,6 +131,7 @@ app.post('/server/add-card', async (req, res) => {
       const forks = forks_count || 0;
 
       // 🔥 2. Get language stats
+      console.time("🐙 Fetch language stats");
       const langRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, {
         headers: {
           Authorization: `token ${GITHUB_TOKEN}`,
@@ -121,6 +140,7 @@ app.post('/server/add-card', async (req, res) => {
         }
       });
       const langJson = await langRes.json();
+      console.timeEnd("🐙 Fetch language stats");
 
       if (!langRes.ok) {
         const langErr = langJson as { message?: string };
@@ -133,8 +153,10 @@ app.post('/server/add-card', async (req, res) => {
 
     // Fetch issues from GitHub
    
+      console.time("🐙 Fetch issues");
 
     const issuesJson = await fetchAllIssues(owner, repo);
+console.timeEnd("🐙 Fetch issues");
 
     if (!Array.isArray(issuesJson)) {
       throw new Error('GitHub API did not return an array of issues');
@@ -144,13 +166,14 @@ app.post('/server/add-card', async (req, res) => {
     const openIssuesCount = issuesOnly.length;
     
     const combinedRepoText = `${repo} ${description ?? ''} ${product_description}`;
-    const combinedRepoTextEmbedding=await getEmbedding(combinedRepoText);
-    console.log("[🧠 Embedding result]", combinedRepoTextEmbedding);
+    console.time("🧠 Embedding repo description");
+    const combinedRepoTextEmbedding = await getEmbedding(combinedRepoText);
+    console.timeEnd("🧠 Embedding repo description");
 
-   console.log("[🔍 combinedRepoText]", combinedRepoText);
 
 
-    // Step 1: Insert card (without issues)
+        console.time("📦 Insert card into Supabase");
+
     const { data: cardInsertData, error: cardError } = await supabase
     .from('cards')
     .insert([{
@@ -167,6 +190,7 @@ app.post('/server/add-card', async (req, res) => {
       embedding: Array.isArray(combinedRepoTextEmbedding) ? combinedRepoTextEmbedding : null
     }])
     .select('id');
+console.timeEnd("📦 Insert card into Supabase");
 
 
     if (cardError || !cardInsertData || cardInsertData.length === 0) {
@@ -175,7 +199,7 @@ app.post('/server/add-card', async (req, res) => {
 
     const card_id = cardInsertData[0].id;
 
-    // Step 2: Insert issues separately
+   
     const issuesWithEmbeddings = await Promise.all(  //sabka await karo so that we get the proper updated data
       issuesOnly.map(async (iss: any,index:number) => {
          const combinedText = `${iss.title} ${iss.body ?? ''}`;
@@ -195,6 +219,7 @@ app.post('/server/add-card', async (req, res) => {
     );
 
     const validIssues=issuesWithEmbeddings.filter((issue)=>issue.embedding!==null)
+console.time("📦 Insert issues into Supabase");
 
     if (validIssues.length > 0) {
       const { error: issueError } = await supabase
@@ -202,9 +227,11 @@ app.post('/server/add-card', async (req, res) => {
         .insert(validIssues);
       if (issueError) throw issueError;
     }
+console.timeEnd("📦 Insert issues into Supabase");
 
 
-    // Step 3: GitHub webhook creation
+    console.time("🌐 Webhook setup");
+
     try {
       const webhookRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/hooks`, {
         method: 'POST',
@@ -225,6 +252,7 @@ app.post('/server/add-card', async (req, res) => {
       });
 
       const webhookJson: any = await webhookRes.json();
+      console.timeEnd("🌐 Webhook setup");
 
       if (!webhookRes.ok) {
         if (webhookRes.status === 401 || webhookJson?.message?.includes('Bad credentials')) {
@@ -355,6 +383,42 @@ app.get('/server/fetch-card-des/:id', async (req, res) => {
     console.error('Error fetching card with issues:', err);
     res.status(500).json({ error: 'Server error' });
     return;
+  }
+});
+
+
+app.post('/server/generate-embedding', async (req, res) => {
+  const { text } = req.body;
+
+  if (!text || typeof text !== 'string') {
+    res.status(400).json({ error: 'Invalid input: text is required' });
+    return;
+  }
+
+  try {
+    console.time('🧠 [Total embedding time]');
+    const embedding = await getEmbedding(text);
+    console.timeEnd('🧠 [Total embedding time]');
+
+    if (!embedding || !Array.isArray(embedding)) {
+      res.status(500).json({ error: 'Embedding failed' });
+      return;
+    }
+
+    res.status(200).json({ embedding });
+  } catch (err: any) {
+    console.error('❌ Error in /server/generate-embedding:', err);
+    res.status(500).json({ error: err.message || 'Unknown error' });
+  }
+});
+
+app.get('/ping', (req, res) => {
+  try {
+    console.log(`Ping hit at: ${new Date().toISOString()}`);
+    res.status(200).send("Pinged");
+  } catch (error) {
+    console.error("Ping error:", error);
+    res.status(500).send("Something went wrong");
   }
 });
 
