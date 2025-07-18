@@ -16,16 +16,70 @@ import {
 } from "@/components/ui/pagination";
 import getEmbedding from "../../../lib/getEmbedding";
 import { supabase } from "../../../lib/supabase";
+import { useSession } from "next-auth/react";
 
 const availableTags = [
-  'AWS', 'GCP', 'Azure', 'React', 'Node.js', 'Python', 'Docker', 'Kubernetes', 'n8n',
-  'TypeScript', 'JavaScript', 'Vue.js', 'Angular', 'MongoDB', 'PostgreSQL', 'MySQL',
-  'Redis', 'GraphQL', 'REST API', 'Next.js', 'Express.js', 'Django', 'Flask',
-  'Spring Boot', 'Laravel', 'Ruby on Rails', 'Go', 'Rust', 'Java', 'C#',
-  'PHP', 'Swift', 'Kotlin', 'Flutter', 'React Native', 'Electron', 'Firebase',
-  'Supabase', 'Vercel', 'Netlify', 'Heroku', 'DigitalOcean', 'Jenkins', 'GitHub Actions',
-  'CircleCI', 'Terraform', 'Ansible', 'Linux', 'Windows', 'macOS', 'iOS', 'Android'
+  // Languages
+  'JavaScript', 'TypeScript', 'Python', 'Java', 'C', 'C++', 'C#', 'Go', 'Rust', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'R', 'Scala', 'Perl', 'Haskell', 'Elixir', 'Dart',
+
+  // Frontend Frameworks
+  'React', 'Next.js', 'Vue.js', 'Nuxt.js', 'Angular', 'Svelte', 'Qwik', 'SolidJS', 'Preact', 'Lit', 'Alpine.js',
+
+  // Backend Frameworks
+  'Node.js', 'Express.js', 'NestJS', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Laravel', 'Ruby on Rails', 'ASP.NET', 'Phoenix', 'Hapi', 'Koa.js', 'Actix',
+
+  // Mobile & Cross-Platform
+  'React Native', 'Flutter', 'SwiftUI',  'Xamarin', 'Ionic', 'NativeScript',
+
+  // Databases
+  'MySQL', 'PostgreSQL', 'MongoDB', 'SQLite', 'Redis', 'Cassandra', 'DynamoDB', 'MariaDB', 'CouchDB', 'Neo4j', 'InfluxDB', 'Supabase', 'PlanetScale', 'Firebase Realtime DB', 'Firestore',
+
+  // DevOps & CI/CD
+  'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Chef', 'Puppet', 'Jenkins', 'GitHub Actions', 'GitLab CI/CD', 'CircleCI', 'Travis CI', 'ArgoCD', 'Spinnaker',
+
+  // Cloud Platforms
+  'AWS', 'GCP', 'Azure', 'DigitalOcean', 'Linode', 'Vultr', 'Render', 'Railway', 'Heroku', 'Netlify', 'Vercel', 'Cloudflare',
+
+  // AI/ML & Data
+  'TensorFlow', 'PyTorch', 'scikit-learn', 'Keras', 'Pandas', 'NumPy', 'Matplotlib', 'OpenCV', 'Jupyter', 'LangChain', 'Transformers', 'Hugging Face', 'OpenAI', 'spaCy',
+
+  // APIs
+  'GraphQL', 'REST API', 'gRPC', 'tRPC', 'WebSockets', 'OpenAPI', 'Postman', 'Swagger',
+
+  // CMS & E-commerce
+  'WordPress', 'Strapi', 'Sanity', 'Ghost', 'Contentful', 'Shopify', 'Magento', 'WooCommerce', 'Medusa.js',
+
+  // Static Site Generators
+  'Gatsby', 'Hugo', 'Jekyll', '11ty', 'Astro',
+
+  // Testing
+  'Jest', 'Mocha', 'Chai', 'Vitest', 'Cypress', 'Playwright', 'Selenium', 'Testing Library',
+
+  // Authentication & Identity
+  'OAuth', 'JWT', 'Auth0', 'Clerk', 'Firebase Auth', 'NextAuth.js', 'Supabase Auth',
+
+  // Package Managers & Build Tools
+  'npm', 'yarn', 'pnpm', 'Webpack', 'Vite', 'Rollup', 'Parcel', 'Turbopack', 'Bun', 'esbuild',
+
+  // Styling
+  'Tailwind CSS', 'Sass', 'Less', 'Styled Components', 'Emotion', 'Chakra UI', 'Material UI', 'Bootstrap', 'ShadCN UI',
+
+  // OS & Platforms
+  'Linux', 'Windows', 'macOS', 'Ubuntu', 'Debian', 'Arch', 'Fedora', 'iOS', 'Android',
+
+  // Version Control & Tools
+  'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Mercurial', 'SVN',
+
+  // Monitoring & Analytics
+  'Prometheus', 'Grafana', 'Datadog', 'Sentry', 'LogRocket', 'Amplitude', 'Mixpanel',
+
+  // Messaging & Event Systems
+  'Kafka', 'RabbitMQ', 'NATS', 'Redis Streams', 'Pub/Sub', 'Socket.IO',
+
+  // Misc Tools & Platforms
+  'Electron', 'n8n', 'Zod', 'Prisma', 'Drizzle ORM', 'Sequelize', 'TypeORM', 'RxJS', 'OpenTelemetry', 'WebRTC', 'Three.js', 'Babylon.js'
 ];
+
 
 const CARDS_PER_PAGE = 6;
 
@@ -59,6 +113,7 @@ export default function YardPage() {
   const [searchQuery, setSearchQuery] = useState<string | number | readonly string[] | undefined>('');
   const [showAllTags, setShowAllTags] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const {data:session,status}=useSession();
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -71,11 +126,11 @@ export default function YardPage() {
     if (!searchQuery || typeof searchQuery !== 'string' || !searchQuery.trim()) return;
     const queryEmbedding = await getEmbedding(searchQuery.trim());
     if (!queryEmbedding) return;
-
+    console.log(Array.from(queryEmbedding))
     setIsSearching(true);
     const { data, error } = await supabase.rpc('match_cards', {
       query_embedding: Array.from(queryEmbedding),
-      match_threshold: 0.6,
+      match_threshold: 0.5,
       match_count: 10,
     });
     setIsSearching(false);
@@ -126,6 +181,9 @@ export default function YardPage() {
   const paginatedCards = filteredCards.slice(startIndex, endIndex);
   const displayedTags = showAllTags ? availableTags : availableTags.slice(0, 10);
 
+
+  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -136,7 +194,39 @@ export default function YardPage() {
             </div>
             <h1 className="text-xl font-bold text-gray-900">DevLinkr</h1>
           </div>
-          <Button>+ Add Project</Button>
+          <div className="flex items-center justify-center gap-1 ">
+            {status === "authenticated" ? (
+                <Link href="/help-request">
+                  <Button>+ Add Project</Button>
+                </Link>
+              ) : (
+                <Button
+                  disabled
+                  className="flex  items-center justify-center text-center text-sm gap-1"
+                >
+                  + Add Project
+                  <span className="text-xs text-red-500">Login required</span>
+                </Button>
+              )}
+
+            {status === "authenticated" ? (
+                <Link href={`/Dashboardpage/${session?.user?.username}`}>
+                  <Button>Dashboard</Button>
+                </Link>
+              ) : (
+                <Button
+                  disabled
+                  className="flex items-center justify-center text-center text-sm gap-1"
+                >
+                  Dashboard
+                  <span className="text-xs text-red-500">Login required</span>
+                </Button>
+
+              )}
+
+          </div>
+          
+               
         </div>
       </header>
 
