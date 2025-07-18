@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Code, ArrowRight, Github, Users, Activity, Heart } from "lucide-react";
+import { Code, ArrowRight, Github, Users, Activity, Heart, LoaderCircleIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,16 @@ import LoginForm from "@/components/LoginForm";
 import Logout from "@/components/Logout";
 
 const HomePage = () => {
-  const { data: session } = useSession();
+  const { data: session,status } = useSession();
+
+  if(status=="loading"){
+    return(
+      <div className="h-screen flex items-center justify-center">   
+        <LoaderCircleIcon className="animate-spin"/>
+      </div>
+    )
+    
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-200">
@@ -68,11 +77,18 @@ const HomePage = () => {
                 <ArrowRight />
               </Button>
             </Link>
-            <Link href={"/help-request"}>
-              <Button variant="secondary" size="lg" className="px-8">
-                Submit Project
-              </Button>
-            </Link>
+            
+              {status === "authenticated" ? (
+                <Link href={"/help-request"}>
+                  <Button variant="secondary" size="lg" className="px-8">
+                    Submit Project
+                  </Button>
+                </Link>
+              ):(
+                <Button variant="secondary" size="lg" className="px-8" onClick={()=>alert("Login First")}>
+                    Submit Project
+                </Button>
+              )}
           </div>
         </div>
       </section>

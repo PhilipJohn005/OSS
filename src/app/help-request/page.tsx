@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import TaskCard from '@/components/help-request-comp/TaskCard';
-import { Code, Github, Plus, Link, LibraryBig, Tag, ArrowLeft, ExternalLink, Users } from 'lucide-react';
+import { Code, Github, Plus, LibraryBig, Tag, ArrowLeft, ExternalLink, Users,LoaderCircle, SplineIcon, ChevronUp, ChevronDown, Filter } from 'lucide-react';
 import {
   Task,
   ToggleTagFn,
@@ -16,6 +16,9 @@ import {
   CustomSession,
 } from '@/components/help-request-comp/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import toast from 'react-hot-toast';
+import {Link as Lk} from 'lucide-react'
+import Link   from 'next/link';
 
 const Add = () => {
   const [repoUrl, setRepoUrl] = useState('');
@@ -23,9 +26,74 @@ const Add = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [shouldRunButtonEffect, setShouldRunButtonEffect] = useState(false);
+  const [isLoading,setIsLoading]=useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
+
   const { data: session } = useSession() as { data: CustomSession | null };
 
-  const availableTags = ['AWS', 'GCP', 'Azure', 'React', 'Node.js', 'Python', 'Docker', 'Kubernetes', 'n8n'];
+  const availableTags = [
+    // Languages
+    'JavaScript', 'TypeScript', 'Python', 'Java', 'C', 'C++', 'C#', 'Go', 'Rust', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'R', 'Scala', 'Perl', 'Haskell', 'Elixir', 'Dart',
+
+    // Frontend Frameworks
+    'React', 'Next.js', 'Vue.js', 'Nuxt.js', 'Angular', 'Svelte', 'Qwik', 'SolidJS', 'Preact', 'Lit', 'Alpine.js',
+
+    // Backend Frameworks
+    'Node.js', 'Express.js', 'NestJS', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Laravel', 'Ruby on Rails', 'ASP.NET', 'Phoenix', 'Hapi', 'Koa.js', 'Actix',
+
+    // Mobile & Cross-Platform
+    'React Native', 'Flutter', 'SwiftUI',  'Xamarin', 'Ionic', 'NativeScript',
+
+    // Databases
+    'MySQL', 'PostgreSQL', 'MongoDB', 'SQLite', 'Redis', 'Cassandra', 'DynamoDB', 'MariaDB', 'CouchDB', 'Neo4j', 'InfluxDB', 'Supabase', 'PlanetScale', 'Firebase Realtime DB', 'Firestore',
+
+    // DevOps & CI/CD
+    'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Chef', 'Puppet', 'Jenkins', 'GitHub Actions', 'GitLab CI/CD', 'CircleCI', 'Travis CI', 'ArgoCD', 'Spinnaker',
+
+    // Cloud Platforms
+    'AWS', 'GCP', 'Azure', 'DigitalOcean', 'Linode', 'Vultr', 'Render', 'Railway', 'Heroku', 'Netlify', 'Vercel', 'Cloudflare',
+
+    // AI/ML & Data
+    'TensorFlow', 'PyTorch', 'scikit-learn', 'Keras', 'Pandas', 'NumPy', 'Matplotlib', 'OpenCV', 'Jupyter', 'LangChain', 'Transformers', 'Hugging Face', 'OpenAI', 'spaCy',
+
+    // APIs
+    'GraphQL', 'REST API', 'gRPC', 'tRPC', 'WebSockets', 'OpenAPI', 'Postman', 'Swagger',
+
+    // CMS & E-commerce
+    'WordPress', 'Strapi', 'Sanity', 'Ghost', 'Contentful', 'Shopify', 'Magento', 'WooCommerce', 'Medusa.js',
+
+    // Static Site Generators
+    'Gatsby', 'Hugo', 'Jekyll', '11ty', 'Astro',
+
+    // Testing
+    'Jest', 'Mocha', 'Chai', 'Vitest', 'Cypress', 'Playwright', 'Selenium', 'Testing Library',
+
+    // Authentication & Identity
+    'OAuth', 'JWT', 'Auth0', 'Clerk', 'Firebase Auth', 'NextAuth.js', 'Supabase Auth',
+
+    // Package Managers & Build Tools
+    'npm', 'yarn', 'pnpm', 'Webpack', 'Vite', 'Rollup', 'Parcel', 'Turbopack', 'Bun', 'esbuild',
+
+    // Styling
+    'Tailwind CSS', 'Sass', 'Less', 'Styled Components', 'Emotion', 'Chakra UI', 'Material UI', 'Bootstrap', 'ShadCN UI',
+
+    // OS & Platforms
+    'Linux', 'Windows', 'macOS', 'Ubuntu', 'Debian', 'Arch', 'Fedora', 'iOS', 'Android',
+
+    // Version Control & Tools
+    'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Mercurial', 'SVN',
+
+    // Monitoring & Analytics
+    'Prometheus', 'Grafana', 'Datadog', 'Sentry', 'LogRocket', 'Amplitude', 'Mixpanel',
+
+    // Messaging & Event Systems
+    'Kafka', 'RabbitMQ', 'NATS', 'Redis Streams', 'Pub/Sub', 'Socket.IO',
+
+    // Misc Tools & Platforms
+    'Electron', 'n8n', 'Zod', 'Prisma', 'Drizzle ORM', 'Sequelize', 'TypeORM', 'RxJS', 'OpenTelemetry', 'WebRTC', 'Three.js', 'Babylon.js'
+  ];
+
+  const displayedTags = showAllTags ? availableTags : availableTags.slice(0, 10);
 
   const toggleTag: ToggleTagFn = (tag) => {
     setSelectedTags((prev) =>
@@ -37,6 +105,8 @@ const Add = () => {
     if (!session?.user?.jwt) return;
     const fetchCards = async () => {
       try {
+        
+        setIsLoading(true);
         const res = await fetch('https://oss-backend-2.onrender.com/server/fetch-user-cards', {
           method: 'GET',
           headers: {
@@ -45,9 +115,14 @@ const Add = () => {
           },
         });
         const result = await res.json();
+        setIsLoading(false);
         setTasks(result.data || []);
       } catch (e) {
         console.error('Error fetching cards', e);
+        setIsLoading(false);
+        setRepoUrl('');
+        setProductDescription('');
+        setSelectedTags([]);
       }
     };
     fetchCards();
@@ -55,14 +130,12 @@ const Add = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const body: AddCardRequest = {
       repo_url: repoUrl,
       product_description: productDescription,
       tags: selectedTags,
     };
-
-    const res = await fetch('http://localhost:4000/server/add-card', {
+    const res = await fetch('https://oss-backend-2.onrender.com/server/add-card', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -70,14 +143,19 @@ const Add = () => {
       },
       body: JSON.stringify(body),
     });
-
     if (!res.ok) {
       const error: AddCardResponse = await res.json();
       if (error?.error === 'GitHub access expired. Please log in again.') {
         alert('GitHub access token expired. Please re-login to enable full functionality later.');
+        setRepoUrl('');
+        setProductDescription('');
+        setSelectedTags([]);
         return;
       }
       console.error('Error:', error?.message ?? error ?? 'Unknown error');
+      setRepoUrl('');
+      setProductDescription('');
+      setSelectedTags([]);
       return;
     }
 
@@ -99,10 +177,12 @@ const Add = () => {
             </div>
             <h1 className="text-xl font-bold text-gray-900">DevLinkr</h1>
           </div>
-          <Button variant="outline">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Projects
-          </Button>
+          <Link href="/yard">
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Projects
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -128,7 +208,7 @@ const Add = () => {
 
             <div>
               <label className="font-medium mb-1 flex items-center gap-2">
-                <Link className='w-5 h-5' /> Repository URL
+                <Lk className='w-5 h-5' /> Repository URL
               </label>
               <Input
                 value={repoUrl}
@@ -152,30 +232,78 @@ const Add = () => {
             </div>
 
             <div>
-              <label className="font-medium flex mb-2 text-center gap-2">
-                <Tag className='w-5 h-5' /> Technologies
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {availableTags.map((tag) => (
-                  <button
-                    type="button"
+              <div className="flex items-center gap-2 mb-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <label className="font-medium">Technologies</label>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {displayedTags.map((tag) => (
+                  <Button
                     key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    size="sm"
+                    type="button"
                     onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1 rounded-full text-sm border ${selectedTags.includes(tag)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-gray-100 text-gray-700 border-gray-300'
-                      }`}
+                    className="text-xs h-8"
                   >
                     {tag}
-                  </button>
+                  </Button>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Selected: {selectedTags.join(', ') || 'None'}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAllTags(!showAllTags)}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                {showAllTags ? (
+                  <>
+                    <ChevronUp className="w-4 h-4 mr-1" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Show All Tags ({availableTags.length - 10} more)
+                  </>
+                )}
+              </Button>
+              {selectedTags.length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-600">Active filters:</span>
+                  {selectedTags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="cursor-pointer hover:bg-red-100 hover:text-red-800"
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag} ×
+                    </Badge>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedTags([])}
+                    className="text-red-600 hover:text-red-800 text-xs"
+                  >
+                    Clear all
+                  </Button>
+                </div>
+              )}
             </div>
-
-            <Button type="submit" className="cursor-pointer w-full">
-              Submit Project
-            </Button>
+            
+            {
+              isLoading ? (
+                <Button disabled className='w-full'>
+                  <span className='flex items-center justify-center'><LoaderCircle className='animate-spin'/></span>
+                </Button>
+              ):(
+                <Button type="submit" className="cursor-pointer w-full">
+                  Submit Project
+                </Button>
+              )}
+            
           </form>
         </div>
 
@@ -191,54 +319,60 @@ const Add = () => {
 
             <CardContent>
               <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-
-                {tasks.length > 0 ? (
-                  tasks.map((task, index) => (
-                    <div
-                      key={index}
-                      className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <h3 className="font-medium text-gray-900 mb-2">{task.card_name}</h3>
-
-                      {task.product_description && (
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {task.product_description}
-                        </p>
-                      )}
-
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Github className="w-3 h-3" />
-                          {task.stars || 0}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          {task.open_issues_count || 0}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {task.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      <a
-                        href={task.repo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+              {
+                isLoading ? (
+                  <div className='flex items-center justify-center'>
+                    <LoaderCircle className='animate-spin'/>
+                  </div>
+                ):tasks.length > 0 ? (
+                    tasks.map((task, index) => (
+                      <div
+                        key={index}
+                        className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        <ExternalLink className="w-3 h-3" />
-                        View Repository
-                      </a>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-sm mt-4">No help requests yet.</p>
-                )}
+                        <h3 className="font-medium text-gray-900 mb-2">{task.card_name}</h3>
+
+                        {task.product_description && (
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {task.product_description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                          <div className="flex items-center gap-1">
+                            <Github className="w-3 h-3" />
+                            {task.stars || 0}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {task.open_issues_count || 0}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {task.tags.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <a
+                          href={task.repo_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          View Repository
+                        </a>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm mt-4">No help requests yet.</p>
+                  )
+                
+              }
               </div>
             </CardContent>
           </Card>
