@@ -24,8 +24,13 @@ import {
   TrendingUp,
   BookOpen,
   ArrowLeft,
+  Code
 } from "lucide-react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
 
 
 interface Achievement {
@@ -39,7 +44,6 @@ interface Achievement {
 
 
 async function fetchUserStats(username: string) {
-
 
   const [userRes, prRes, issueRes, eventRes, reposRes] = await Promise.all([
     fetch(`https://api.github.com/users/${username}`),
@@ -76,7 +80,7 @@ async function fetchUserStats(username: string) {
     followersCount: userData.followers,
   };
 }
-  {/*const userLogin = userData.login;
+{/*const userLogin = userData.login;
 
   // Filter PRs authored by user in someone else's repo
   const validPRs = (prData.items || []).filter(
@@ -145,6 +149,8 @@ const DashboardPage = () => {
   const router = useRouter();
   const [userStats, setUserStats] = useState<any>(null);      
   const username=params.name as string;
+
+
 
   useEffect(()=>{
     if(username){
@@ -260,21 +266,36 @@ const DashboardPage = () => {
   const nextAchievements = achievements.filter(a => !a.earned).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 max-w-6xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <button
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
-          onClick={() => router.push("/yard")}
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Projects
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Github className="w-5 h-5 text-white" />
+    <div>
+      <header className="">
+        <div className="mb-6 max-w-7xl mx-auto flex items-center justify-between p-6">
+          <button
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
+            onClick={() => router.push("/yard")}
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Projects
+          </button>
+          <div className="flex items-center gap-2">
+            {session?.user ? (
+              <Image
+                src={session?.user?.image ?? "/default-avatar.png"}
+                alt={session?.user?.name ?? "User Avatar"}
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+            
+          ):(
+            <Link href={"/"}>
+              <Button>Login</Button>
+            </Link>
+            
+          )}
           </div>
-          <h1 className="text-xl font-bold text-gray-900">DevConnect</h1>
         </div>
-      </div>
+      </header>
+      <div className="min-h-screen bg-gray-50 p-6 max-w-6xl mx-auto">
+      
 
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Dashboard</h1>
       <p className="text-gray-600 mb-6">Track your open source journey and achievements</p>
@@ -336,7 +357,12 @@ const DashboardPage = () => {
         </CardContent>
       </Card>
     </div>
+    </div>
+    
   );
 };
 
 export default DashboardPage;
+
+
+
