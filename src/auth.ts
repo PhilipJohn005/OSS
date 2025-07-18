@@ -15,7 +15,7 @@ export const {
       authorization: {
         params: {
           prompt: "consent",
-          scope: "read:user repo user:email admin:repo_hook",
+          scope: "read:user user:email admin:repo_hook"
         },
       },
       profile: async (profile, tokens) => {  //after login github will send user details...we want to shape it how it looks like
@@ -42,8 +42,9 @@ export const {
         return {
           id: String(profile.id),
           name: profile.name ?? profile.login ?? null,
-          email: email,
+          email: email ?? "",
           image: profile.avatar_url ?? null,
+          username: profile.login
         };
       },
     }),
