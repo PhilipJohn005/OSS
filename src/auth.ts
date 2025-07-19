@@ -15,7 +15,8 @@ export const {
       authorization: {
         params: {
           prompt: "consent",
-          scope: "read:user user:email admin:repo_hook"
+          scope: "read:user user:email admin:repo_hook",
+          redirect_uri: 'https://oss-main-website.vercel.app/api/auth/callback/github'
         },
       },
       profile: async (profile, tokens) => {  //after login github will send user details...we want to shape it how it looks like
