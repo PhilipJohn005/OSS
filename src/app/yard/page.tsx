@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ChevronUp, ChevronDown, AlertCircle, Filter, Search, Github, Star, Code, GitFork } from "lucide-react";
+import { ChevronUp, ChevronDown, AlertCircle, Filter, Search, Github, Star, Code, GitFork, Loader2Icon } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -114,6 +114,7 @@ export default function YardPage() {
   const [showAllTags, setShowAllTags] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const {data:session,status}=useSession();
+  const [isLoading,setIsLoading]=useState(false);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -159,7 +160,9 @@ export default function YardPage() {
   useEffect(() => {
     const fetchCardDetails = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('https://oss-backend-2.onrender.com/server/fetch-card');
+        setIsLoading(false);
         if (!response.ok) throw new Error("Failed to fetch cards");
         const { data } = await response.json();
         setCards(deduplicateCards(data || []));
@@ -324,17 +327,23 @@ export default function YardPage() {
           )}
         </div>
 
-        <div className="mb-6 flex justify-between items-center">
-          <p className="text-gray-600">
-            Showing {paginatedCards.length} of {filteredCards.length} project{filteredCards.length !== 1 ? 's' : ''}
-            {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
-          </p>
-        </div>
-
-        {paginatedCards.length === 0 && (
-          <div>No Repos of your requested issue found!</div>
-        )}
-
+          {
+            isLoading ? (  
+              <div className="flex items-center justify-center">
+                  <Loader2Icon className="animate-spin"/>             
+              </div>          
+            ):paginatedCards.length === 0 ? (
+                <div>No Repos of your requested issue found!</div>
+              ):(
+                <div className="mb-6 flex justify-between items-center">
+                  <p className="text-gray-600">
+                    Showing {paginatedCards.length} of {filteredCards.length} project{filteredCards.length !== 1 ? 's' : ''}
+                    {currentPage > 1 && ` (Page ${currentPage} of ${totalPages})`}
+                  </p>
+                </div>
+              )  
+          }
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-10">
           {paginatedCards.map((card) => (
             <Link key={card.id} href={`/yard/${card.id}`}>
