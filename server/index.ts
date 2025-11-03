@@ -89,7 +89,7 @@ async function fetchAllIssues(owner: string, repo: string): Promise<any[]> {
 
 
 app.post('/server/add-card', async (req, res) => {
-  console.log("🔥 /server/add-card endpoint hit");
+  console.log("/server/add-card endpoint hit");
 
   const { repo_url, product_description, tags } = req.body;
 
@@ -108,8 +108,7 @@ app.post('/server/add-card', async (req, res) => {
 
     const { owner, repo } = extractOwnerAndRepo(repo_url);
 
-    // 🔥 1. Get repo metadata
-    console.time("🐙 Fetch repo details");
+    console.time(" Fetch repo details");
 
       const repoDetailsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
         headers: {
@@ -119,7 +118,7 @@ app.post('/server/add-card', async (req, res) => {
         }
       });
       const repoDetails = await repoDetailsRes.json();
-    console.timeEnd("🐙 Fetch repo details");
+    console.timeEnd(" Fetch repo details");
 
       if (!repoDetailsRes.ok) {
         const details = repoDetails as { message?: string };
@@ -130,8 +129,7 @@ app.post('/server/add-card', async (req, res) => {
       const stars = stargazers_count || 0;
       const forks = forks_count || 0;
 
-      // 🔥 2. Get language stats
-      console.time("🐙 Fetch language stats");
+      console.time(" Fetch language stats");
       const langRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, {
         headers: {
           Authorization: `token ${GITHUB_TOKEN}`,
@@ -140,7 +138,7 @@ app.post('/server/add-card', async (req, res) => {
         }
       });
       const langJson = await langRes.json();
-      console.timeEnd("🐙 Fetch language stats");
+      console.timeEnd(" Fetch language stats");
 
       if (!langRes.ok) {
         const langErr = langJson as { message?: string };
@@ -151,12 +149,11 @@ app.post('/server/add-card', async (req, res) => {
         .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown';
       
 
-    // Fetch issues from GitHub
    
-      console.time("🐙 Fetch issues");
+      console.time("Fetch issues");
 
     const issuesJson = await fetchAllIssues(owner, repo);
-console.timeEnd("🐙 Fetch issues");
+    console.timeEnd("Fetch issues");
 
     if (!Array.isArray(issuesJson)) {
       throw new Error('GitHub API did not return an array of issues');
@@ -166,13 +163,13 @@ console.timeEnd("🐙 Fetch issues");
     const openIssuesCount = issuesOnly.length;
     
     const combinedRepoText = `${repo} ${description ?? ''} ${product_description}`;
-    console.time("🧠 Embedding repo description");
+    console.time("Embedding repo description");
     const combinedRepoTextEmbedding = await getEmbedding(combinedRepoText);
-    console.timeEnd("🧠 Embedding repo description");
+    console.timeEnd("Embedding repo description");
 
 
 
-        console.time("📦 Insert card into Supabase");
+        console.time(" Insert card into Supabase");
 
     const { data: cardInsertData, error: cardError } = await supabase
     .from('cards')
@@ -190,7 +187,7 @@ console.timeEnd("🐙 Fetch issues");
       embedding: Array.isArray(combinedRepoTextEmbedding) ? combinedRepoTextEmbedding : null
     }])
     .select('id');
-console.timeEnd("📦 Insert card into Supabase");
+console.timeEnd("Insert card into Supabase");
 
 
     if (cardError || !cardInsertData || cardInsertData.length === 0) {
@@ -219,7 +216,7 @@ console.timeEnd("📦 Insert card into Supabase");
     );
 
     const validIssues=issuesWithEmbeddings.filter((issue)=>issue.embedding!==null)
-console.time("📦 Insert issues into Supabase");
+console.time(" Insert issues into Supabase");
 
     if (validIssues.length > 0) {
       const { error: issueError } = await supabase
@@ -227,10 +224,10 @@ console.time("📦 Insert issues into Supabase");
         .insert(validIssues);
       if (issueError) throw issueError;
     }
-console.timeEnd("📦 Insert issues into Supabase");
+console.timeEnd("Insert issues into Supabase");
 
 
-    console.time("🌐 Webhook setup");
+    console.time(" Webhook setup");
 
     try {
       const webhookRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/hooks`, {
@@ -252,7 +249,7 @@ console.timeEnd("📦 Insert issues into Supabase");
       });
 
       const webhookJson: any = await webhookRes.json();
-      console.timeEnd("🌐 Webhook setup");
+      console.timeEnd(" Webhook setup");
 
       if (!webhookRes.ok) {
         if (webhookRes.status === 401 || webhookJson?.message?.includes('Bad credentials')) {
@@ -263,7 +260,7 @@ console.timeEnd("📦 Insert issues into Supabase");
           webhookRes.status === 422 &&
           webhookJson?.errors?.some((err: any) => err.message === 'Hook already exists on this repository')
         ) {
-          console.warn("ℹ️ Webhook already exists, continuing...");
+          console.warn(" Webhook already exists, continuing...");
           // Do NOT treat this as failure — just proceed
           res.status(200).json({ message: 'Card and issues added (webhook already exists)', issuesCount: validIssues.length });
           return;
@@ -396,9 +393,9 @@ app.post('/server/generate-embedding', async (req, res) => {
   }
 
   try {
-    console.time('🧠 [Total embedding time]');
+    console.time('[Total embedding time]');
     const embedding = await getEmbedding(text);
-    console.timeEnd('🧠 [Total embedding time]');
+    console.timeEnd(' [Total embedding time]');
 
     if (!embedding || !Array.isArray(embedding)) {
       res.status(500).json({ error: 'Embedding failed' });
