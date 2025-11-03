@@ -32,64 +32,44 @@ const Add = () => {
   const { data: session } = useSession() as { data: CustomSession | null };
 
   const availableTags = [
-    // Languages
     'JavaScript', 'TypeScript', 'Python', 'Java', 'C', 'C++', 'C#', 'Go', 'Rust', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'R', 'Scala', 'Perl', 'Haskell', 'Elixir', 'Dart',
 
-    // Frontend Frameworks
     'React', 'Next.js', 'Vue.js', 'Nuxt.js', 'Angular', 'Svelte', 'Qwik', 'SolidJS', 'Preact', 'Lit', 'Alpine.js',
 
-    // Backend Frameworks
     'Node.js', 'Express.js', 'NestJS', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Laravel', 'Ruby on Rails', 'ASP.NET', 'Phoenix', 'Hapi', 'Koa.js', 'Actix',
 
-    // Mobile & Cross-Platform
     'React Native', 'Flutter', 'SwiftUI',  'Xamarin', 'Ionic', 'NativeScript',
 
-    // Databases
     'MySQL', 'PostgreSQL', 'MongoDB', 'SQLite', 'Redis', 'Cassandra', 'DynamoDB', 'MariaDB', 'CouchDB', 'Neo4j', 'InfluxDB', 'Supabase', 'PlanetScale', 'Firebase Realtime DB', 'Firestore',
 
-    // DevOps & CI/CD
     'Docker', 'Kubernetes', 'Terraform', 'Ansible', 'Chef', 'Puppet', 'Jenkins', 'GitHub Actions', 'GitLab CI/CD', 'CircleCI', 'Travis CI', 'ArgoCD', 'Spinnaker',
 
-    // Cloud Platforms
     'AWS', 'GCP', 'Azure', 'DigitalOcean', 'Linode', 'Vultr', 'Render', 'Railway', 'Heroku', 'Netlify', 'Vercel', 'Cloudflare',
 
-    // AI/ML & Data
     'TensorFlow', 'PyTorch', 'scikit-learn', 'Keras', 'Pandas', 'NumPy', 'Matplotlib', 'OpenCV', 'Jupyter', 'LangChain', 'Transformers', 'Hugging Face', 'OpenAI', 'spaCy',
 
-    // APIs
     'GraphQL', 'REST API', 'gRPC', 'tRPC', 'WebSockets', 'OpenAPI', 'Postman', 'Swagger',
 
-    // CMS & E-commerce
     'WordPress', 'Strapi', 'Sanity', 'Ghost', 'Contentful', 'Shopify', 'Magento', 'WooCommerce', 'Medusa.js',
 
-    // Static Site Generators
     'Gatsby', 'Hugo', 'Jekyll', '11ty', 'Astro',
 
-    // Testing
     'Jest', 'Mocha', 'Chai', 'Vitest', 'Cypress', 'Playwright', 'Selenium', 'Testing Library',
 
-    // Authentication & Identity
     'OAuth', 'JWT', 'Auth0', 'Clerk', 'Firebase Auth', 'NextAuth.js', 'Supabase Auth',
 
-    // Package Managers & Build Tools
     'npm', 'yarn', 'pnpm', 'Webpack', 'Vite', 'Rollup', 'Parcel', 'Turbopack', 'Bun', 'esbuild',
 
-    // Styling
     'Tailwind CSS', 'Sass', 'Less', 'Styled Components', 'Emotion', 'Chakra UI', 'Material UI', 'Bootstrap', 'ShadCN UI',
 
-    // OS & Platforms
     'Linux', 'Windows', 'macOS', 'Ubuntu', 'Debian', 'Arch', 'Fedora', 'iOS', 'Android',
 
-    // Version Control & Tools
     'Git', 'GitHub', 'GitLab', 'Bitbucket', 'Mercurial', 'SVN',
 
-    // Monitoring & Analytics
     'Prometheus', 'Grafana', 'Datadog', 'Sentry', 'LogRocket', 'Amplitude', 'Mixpanel',
 
-    // Messaging & Event Systems
     'Kafka', 'RabbitMQ', 'NATS', 'Redis Streams', 'Pub/Sub', 'Socket.IO',
 
-    // Misc Tools & Platforms
     'Electron', 'n8n', 'Zod', 'Prisma', 'Drizzle ORM', 'Sequelize', 'TypeORM', 'RxJS', 'OpenTelemetry', 'WebRTC', 'Three.js', 'Babylon.js'
   ];
 
@@ -187,7 +167,6 @@ const Add = () => {
         </div>
       </header>
 
-      {/* TITLE SECTION */}
       <div className='p-6 mx-auto max-w-7xl'>
         <div className='max-w-4xl'>
           <h2 className="text-3xl font-bold mb-2">Submit Your Project</h2>
@@ -195,9 +174,7 @@ const Add = () => {
         </div>
       </div>
 
-      {/* MAIN GRID */}
       <div className="max-w-7xl mx-auto pl-6 pb-6 pr-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* LEFT - FORM */}
         <div className='bg-white p-6 border border-gray-300 rounded-xl shadow-sm max-h-[90vh] overflow-auto'>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -308,7 +285,6 @@ const Add = () => {
           </form>
         </div>
 
-        {/* RIGHT - SUBMITTED PROJECTS */}
         <div className="items-center justify-center flex flex-col w-full">
           <Card className="w-full max-w-4xl rounder-md">
             <CardHeader>
