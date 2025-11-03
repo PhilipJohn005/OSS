@@ -10,9 +10,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import LoginForm from "@/components/LoginForm"; 
 import Logout from "@/components/Logout";
+import { useEffect } from "react";
 
 const HomePage = () => {
   const { data: session,status } = useSession();
+
+  useEffect(()=>{
+    if(typeof window!==window.undefined){
+      fetch('api/tracker',{
+        method:"POST",
+        headers:{"Content-Type": "application/json"},
+        body:JSON.stringify({path:window.location.pathname}),
+      });
+    }
+  },[])
 
   if(status=="loading"){
     return(
@@ -93,7 +104,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-16 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -158,7 +168,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="text-white bg-gray-900 py-8 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-gray-400 inline-flex items-center justify-center gap-2">
