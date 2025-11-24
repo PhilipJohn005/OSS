@@ -170,6 +170,18 @@ export default function YardPage() {
         console.error("Error fetching cards:", err);
       }
     };
+
+    fetch('/api/tracker',{
+      method: "POST",
+      headers : {"Content-Type" : "application/json"},
+      body : JSON.stringify({
+        path : window.location.pathname,
+        email : session?.user?.email || null,
+        user : session?.user?.name || null,
+        uid : session?.user?.id || null
+      })
+    }).catch((e)=>console.log("Tracking user error : " + e))
+
     fetchCardDetails();
   }, []);
 
