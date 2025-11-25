@@ -152,6 +152,18 @@ const DashboardPage = () => {
     }
   },[username])
 
+  useEffect(()=>{
+    fetch('/api/tracker',{
+      method: "POST",
+      headers: { "Content-Type" : "application/json" },
+      body: JSON.stringify({
+        path : window.location.pathname,
+        email : session?.user?.email || null,
+        uid : session?.user?.id || null,
+        user : session?.user?.name || null
+      })
+    })
+  },[]);
  
 
   if (!userStats) return <div className="p-6 text-gray-600">Loading dashboard...</div>;
