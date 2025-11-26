@@ -81,6 +81,19 @@ const Add = () => {
     );
   };
 
+  useEffect(()=>{
+      fetch('/api/tracker',{
+        method: "POST",
+        headers: { "Content-Type" : "application/json" },
+        body: JSON.stringify({
+          path : window.location.pathname,
+          email : session?.user?.email || null,
+          uid : session?.user?.id || null,
+          user : session?.user?.name || null
+        })
+      })
+  },[]);
+
   useEffect(() => {
     if (!session?.user?.jwt) return;
     const fetchCards = async () => {
