@@ -95,7 +95,6 @@ interface Card {
   open_issues_count?: number;
 }
 
-// ✅ Utility function to remove duplicates by card ID
 function deduplicateCards(cards: Card[]): Card[] {
   const seen = new Map<number, Card>();
   for (const card of cards) {

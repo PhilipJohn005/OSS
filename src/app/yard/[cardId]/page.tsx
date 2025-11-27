@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ExternalLink, Github, User, Calendar, Star, AlertCircle, Copy, Check, ArrowLeft, Tag, GitBranch, Users,GitFork } from 'lucide-react';
 import Link from 'next/link';
 import CardListener from '@/app/actions/cardlistener'; 
+import { useSession } from 'next-auth/react';
 
 interface Issue {
   title: string;
@@ -44,6 +45,8 @@ const CardDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
+  const { data:session, status } = useSession();
+
 
   useEffect(() => {
     const fetchCard = async () => {
@@ -60,6 +63,19 @@ const CardDetailsPage = () => {
 
     if (id) fetchCard();
   }, [id]);
+
+  useEffect(()=>{
+    fetch('/api/tracker',{
+        method: "POST",
+        headers : {"Content-Type" : "application/json"},
+        body : JSON.stringify({
+          path : window.location.pathname,
+          email : session?.user?.email || null,
+          user : session?.user?.name || null,
+          uid : session?.user?.id || null
+        })
+    }).catch((e)=>console.log("Tracking user error : " + e))
+  },[])
 
   const copyRepoUrl = async () => {
     if (card?.repo_url) {
@@ -88,7 +104,6 @@ const CardDetailsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* ✅ Realtime listener */}
       <CardListener
         cardId={id}
         onNewIssue={(newIssue) => {
