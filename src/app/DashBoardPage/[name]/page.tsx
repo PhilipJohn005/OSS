@@ -32,7 +32,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 
-
 interface Achievement {
   id: string;
   title: string;
@@ -120,6 +119,7 @@ async function fetchUserStats(username: string) {
   };
 }*/}
 
+  
 
 const getRarityColor = (rarity: string) => {
   switch (rarity) {
@@ -149,7 +149,19 @@ const DashboardPage = () => {
   const router = useRouter();
   const [userStats, setUserStats] = useState<any>(null);      
   const username=params.name as string;
-
+  
+  useEffect(()=>{
+    fetch('/api/tracker',{
+      method: "POST",
+      headers: { "Content-Type" : "application/json" },
+      body: JSON.stringify({
+        path : window.location.pathname,
+        email : session?.user?.email || null,
+        uid : session?.user?.id || null,
+        user : session?.user?.name || null
+      })
+    })
+  },[]);
 
 
   useEffect(()=>{
