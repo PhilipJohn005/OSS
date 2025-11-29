@@ -38,7 +38,7 @@ const HomePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-200">
 
       <header className="bg-white shadow-sm border-b">
-        <div className="items-center justify-between mx-auto max-w-6xl px-6 py-4 flex">
+        <div className="items-center justify-between mx-auto max-w-6xl px-6 py-4 flex sm:flex-row flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Code className="w-5 h-5 text-white"/>
@@ -66,7 +66,6 @@ const HomePage = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <Badge variant="outline" className="mb-4">
@@ -81,7 +80,7 @@ const HomePage = () => {
             projects and collaborate with the community to build amazing
             software.
           </p>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center items-center gap-4 md:flex-row flex-col">
             <Link href={"/yard"}>
               <Button variant="default" size="lg" className="px-8">
                 Explore Projects
@@ -96,7 +95,7 @@ const HomePage = () => {
                   </Button>
                 </Link>
               ):(
-                <Button variant="secondary" size="lg" className="px-8" onClick={()=>alert("Login First")}>
+                <Button variant="secondary" size="lg" className="px-8 w-fit" onClick={()=>alert("Login First")}>
                     Submit Project
                 </Button>
               )}
