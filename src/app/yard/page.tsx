@@ -184,7 +184,7 @@ export default function YardPage() {
     fetchCardDetails();
   }, []);
 
-  const filteredCards = cards.filter(card =>
+  const filteredCards = cards.filter(card =>     //this initially contains every single card
     selectedTags.length === 0 ||
     selectedTags.every(tag => card.tags.includes(tag))
   );
@@ -195,9 +195,7 @@ export default function YardPage() {
   const paginatedCards = filteredCards.slice(startIndex, endIndex);
   const displayedTags = showAllTags ? availableTags : availableTags.slice(0, 10);
 
-
   
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b">
@@ -272,7 +270,7 @@ export default function YardPage() {
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            {displayedTags.map((tag) => {
+            {displayedTags.map((tag) => {   //we are doing this for the count of each tag....like how many cards have react tag in them so React(7)
               const countWithTag = cards.filter(card => card.tags.includes(tag)).length;
               const countWithSelected = selectedTags.length > 0
                 ? cards.filter(card =>

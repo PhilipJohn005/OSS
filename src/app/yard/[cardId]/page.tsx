@@ -164,7 +164,8 @@ const CardDetailsPage = () => {
               <CardContent className="space-y-6">
                 {card.issues.length === 0 ? (
                   <p className="text-gray-500">No issues listed.</p>
-                ) : card.issues.map((issue, index) => (
+                ) : 
+                card.issues.map((issue, index) => (
                   <div key={index} className="border rounded-lg p-6 bg-white">
                     <div className="flex justify-between items-start mb-4">
                       <h3 className="font-semibold text-gray-900 text-lg pr-4">{issue.title}</h3>

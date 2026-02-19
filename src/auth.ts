@@ -89,3 +89,11 @@ export const {
 
   secret: process.env.NEXTAUTH_SECRET,   //signing internal jwt
 });
+/*
+const { data: session } = useSession();
+You are already receiving:
+
+A verified and decoded view of the internal JWT.
+
+No manual decoding needed.
+*/ 
