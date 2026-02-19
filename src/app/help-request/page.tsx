@@ -124,6 +124,9 @@ const Add = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isLoading) return;
+
+    setIsLoading(true);
+
     const body: AddCardRequest = {
       repo_url: repoUrl,
       product_description: productDescription,
