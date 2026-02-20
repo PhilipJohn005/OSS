@@ -35,10 +35,10 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-200">
+    <div className="min-h-screen relative bg-gradient-to-br from-slate-50 to-blue-200">
 
-      <header className="bg-white shadow-sm border-b">
-        <div className="items-center justify-between mx-auto max-w-6xl px-6 py-4 flex sm:flex-row flex-col gap-4">
+      <header className="fixed top-0 left-0 w-full">
+        <div className="items-center mt-4 justify-between backdrop-blur-md mx-auto max-w-7xl px-6 py-4 flex sm:flex-row flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Code className="w-5 h-5 text-white"/>
@@ -67,7 +67,7 @@ const HomePage = () => {
       </header>
 
       <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center pt-8">
           <Badge variant="outline" className="mb-4">
             Open Source Platform
           </Badge>
@@ -170,7 +170,7 @@ const HomePage = () => {
       <footer className="text-white bg-gray-900 py-8 px-6">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-gray-400 inline-flex items-center justify-center gap-2">
-            Made with <Heart className="w-4 h-4 text-red-400" />
+            Made with <Heart className="w-4 h-4 text-red-400" /> by Philip
           </p>
         </div>
       </footer>
