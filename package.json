@@ -12,6 +12,7 @@
     "dev:fullstack": "concurrently --names \"FRONTEND,BACKEND\" --prefix \"[{name}]\" --prefix-colors \"bgBlue.bold,bgMagenta.bold\" \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
+    "@google/genai": "^1.42.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
