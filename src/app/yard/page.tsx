@@ -197,9 +197,9 @@ export default function YardPage() {
 
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="items-center justify-between mx-auto max-w-6xl px-6 py-4 flex">
+    <div className="min-h-screen relative bg-gray-50">
+      <header className="fixed top-0 left-0 w-full">
+        <div className="items-center mt-4 justify-between backdrop-blur-md mx-auto max-w-6xl px-6 py-4 flex">
           <div className="items-center flex gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Code className="w-5 h-5 text-white" />
@@ -242,8 +242,8 @@ export default function YardPage() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-8">
+      <div className="max-w-6xl mx-auto px-6 py-8 ">
+        <div className="mb-8 pt-16">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Open Source Projects</h1>
           <p className="text-gray-600">Discover and contribute to amazing open source projects</p>
         </div>

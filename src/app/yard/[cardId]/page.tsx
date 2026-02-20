@@ -102,7 +102,7 @@ const CardDetailsPage = () => {
   if (!card) return <div className="min-h-screen flex justify-center items-center text-red-500">Card not found</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative bg-gray-50">
 
       <CardListener
         cardId={id}
@@ -119,8 +119,8 @@ const CardDetailsPage = () => {
         }}
       />
 
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <header className="fixed top-0 left-0 w-full">
+        <div className="items-center mt-4 justify-between backdrop-blur-md mx-auto max-w-7xl px-6 py-4 flex">
           <Link href="/yard">
             <Button variant="ghost">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Projects
@@ -129,7 +129,7 @@ const CardDetailsPage = () => {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8 pt-26">
         <Card className="p-8 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start gap-6">
             <div>

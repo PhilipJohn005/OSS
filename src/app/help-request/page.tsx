@@ -164,10 +164,10 @@ const Add = () => {
   };
 
   return (
-    <div className="max-h-screen bg-[#f9fafb] pb-6">
+    <div className="max-h-screen relative bg-[#f9fafb] pb-6">
       {/* HEADER */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <header className="fixed top-0 left-0 w-full">
+        <div className="items-center mt-4 justify-between backdrop-blur-md mx-auto max-w-7xl px-6 py-4 flex">
           <div className="flex gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Code className="w-5 h-5 text-white" />
@@ -184,7 +184,7 @@ const Add = () => {
       </header>
 
       <div className='p-6 mx-auto max-w-7xl'>
-        <div className='max-w-4xl'>
+        <div className='max-w-4xl pt-16'>
           <h2 className="text-3xl font-bold mb-2">Submit Your Project</h2>
           <p className="text-gray-600 mb-6">Share your open source project with the developer community</p>
         </div>
