@@ -167,8 +167,7 @@ const Add = () => {
     <div className="max-h-screen relative bg-[#f9fafb] pb-6">
       {/* HEADER */}
       <header className="fixed top-0 left-0 w-full">
-        <div className="items-center mt-4 justify-between backdrop-blur-md mx-auto max-w-7xl px-6 py-4 flex">
-          <div className="flex gap-2">
+          <div className="items-center mt-4 justify-between backdrop-blur-lg mx-auto max-w-7xl px-6 py-4 flex flex-row gap-4 bg-white/10 border border-white/20 rounded-2xl shadow-lg">          <div className="flex gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Code className="w-5 h-5 text-white" />
             </div>

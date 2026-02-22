@@ -120,8 +120,7 @@ const CardDetailsPage = () => {
       />
 
       <header className="fixed top-0 left-0 w-full">
-        <div className="items-center mt-4 justify-between backdrop-blur-md mx-auto max-w-7xl px-6 py-4 flex">
-          <Link href="/yard">
+        <div className="items-center mt-4 justify-between backdrop-blur-lg mx-auto max-w-7xl px-6 py-4 flex flex-row gap-4 bg-white/10 border border-white/20 rounded-2xl shadow-lg">          <Link href="/yard">
             <Button variant="ghost">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Projects
             </Button>
